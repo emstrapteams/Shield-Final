@@ -13,12 +13,13 @@ const app = express();
 // CORS configuration
 const allowedOrigins = [
   "http://localhost:5173",
+  "https://shield-final-frontend-15s7rn9zb-emstrapteams-9636s-projects.vercel.app",
   "https://shield-final-frontend-aipqcs8zj-emstrapteams-9636s-projects.vercel.app",
 ];
 
 app.use(
   cors({
-    origin: function (origin, callback) {
+    origin: (origin, callback) => {
       if (!origin || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
@@ -28,8 +29,12 @@ app.use(
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    optionsSuccessStatus: 204,
   })
 );
+
+// Handle preflight requests
+app.options(/.*/, cors());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -58,7 +63,7 @@ const trainingSessionRoutes = require("../intern-modules/routes/trainingSessionR
 const trainingAttendanceRoutes = require("../intern-modules/routes/trainingAttendanceRoutes");
 const trainingDashboardRoutes = require("../intern-modules/routes/trainingDashboardRoutes");
 
-// Connect to MongoDB before handling API requests.
+// Connect to MongoDB before handling API requests
 let dbPromise;
 
 app.use(async (req, res, next) => {
@@ -71,6 +76,7 @@ app.use(async (req, res, next) => {
     next();
   } catch (error) {
     dbPromise = null;
+
     console.error("Database connection error:", error.message);
 
     res.status(503).json({
@@ -99,7 +105,7 @@ app.get("/api/auth/me", protect, (req, res) => {
   });
 });
 
-// Company administration routes must come before general company routes.
+// Company administration routes must come before general company routes
 app.use("/api/companies", companyAdminRoutes);
 app.use("/api/companies", companyRoutes);
 
@@ -119,39 +125,48 @@ app.use("/api/departments", safetyModuleAccess, departmentRoutes);
 app.use("/api/facilities", safetyModuleAccess, facilityRoutes);
 app.use("/api/employees", safetyModuleAccess, safetyEmployeeRoutes);
 app.use("/api/equipment", safetyModuleAccess, equipmentRoutes);
+
 app.use(
   "/api/fire-extinguishers",
   safetyModuleAccess,
   fireExtinguisherRoutes
 );
+
 app.use("/api/first-aid-kits", safetyModuleAccess, firstAidKitRoutes);
 app.use("/api/inspections", safetyModuleAccess, inspectionRoutes);
+
 app.use(
   "/api/corrective-actions",
   safetyModuleAccess,
   correctiveActionRoutes
 );
+
 app.use(
   "/api/emergency-resources",
   safetyModuleAccess,
   emergencyResourceRoutes
 );
+
 app.use("/api/drills", safetyModuleAccess, drillRoutes);
+
 app.use(
   "/api/training-programs",
   safetyModuleAccess,
   trainingProgramRoutes
 );
+
 app.use(
   "/api/training-sessions",
   safetyModuleAccess,
   trainingSessionRoutes
 );
+
 app.use(
   "/api/training-attendance",
   safetyModuleAccess,
   trainingAttendanceRoutes
 );
+
 app.use(
   "/api/training-dashboard",
   safetyModuleAccess,

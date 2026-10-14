@@ -112,7 +112,28 @@ const createCompanyAdmin = async (req, res) => {
     });
   }
 };
+// List Company Admins for the Super Admin dashboard
+const getCompanyAdmins = async (req, res) => {
+  try {
+    const admins = await User.find({ role: "company_admin" })
+      .select("name email company status createdAt")
+      .populate("company", "name code")
+      .sort({ createdAt: -1 })
+      .lean();
 
+    return res.status(200).json({
+      success: true,
+      data: { admins },
+    });
+  } catch (error) {
+    console.error("Get Company Admins error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to load Company Admins.",
+    });
+  }
+};
 module.exports = {
   createCompanyAdmin,
+  getCompanyAdmins,
 };

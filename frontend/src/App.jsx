@@ -1,4 +1,4 @@
-
+import { BrowserRouter } from "react-router-dom";
 import { useState } from "react";
 import Login from "./pages/Login";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
@@ -9,7 +9,7 @@ import {
   logoutUser,
 } from "./services/authService";
 
-function App() {
+function AppContent() {
   const [user, setUser] = useState(getStoredUser);
 
   const handleLogin = (loggedInUser) => {
@@ -34,31 +34,39 @@ function App() {
     );
   }
 
-if (user.role === "employee") {
+  if (user.role === "employee") {
+    return (
+      <EmployeeDashboard
+        user={user}
+        onLogout={handleLogout}
+      />
+    );
+  }
+
+  if (user.role === "company_admin") {
+    return (
+      <CompanyAdminDashboard
+        user={user}
+        onLogout={handleLogout}
+      />
+    );
+  }
+
   return (
-    <EmployeeDashboard
-      user={user}
-      onLogout={handleLogout}
-    />
+    <main style={{ padding: "40px", fontFamily: "Arial, sans-serif" }}>
+      <h2>Dashboard under development</h2>
+      <p>
+        The {user.role.replace("_", " ")} dashboard is coming next.
+      </p>
+      <button onClick={handleLogout}>Logout</button>
+    </main>
   );
-}
-if (user.role === "company_admin") {
-  return (
-    <CompanyAdminDashboard
-      user={user}
-      onLogout={handleLogout}
-    />
-  );
-}
-return (
-  <main style={{ padding: "40px", fontFamily: "Arial, sans-serif" }}>
-    <h2>Dashboard under development</h2>
-    <p>
-      The {user.role.replace("_", " ")} dashboard is coming next.
-    </p>
-    <button onClick={handleLogout}>Logout</button>
-  </main>
-);
 }
 
-export default App;
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
+  );
+}

@@ -835,3 +835,492 @@
   background: #fef2f2;
   color: #b91c1c;
 }
+
+
+/* --------------------------------------------------------------------------
+   Intern safety modules
+   Keeps the intern pages visually consistent with the existing Shield shell.
+   All rules are scoped so Overview and Emergency Monitoring remain unchanged.
+   -------------------------------------------------------------------------- */
+
+.intern-module-wrapper {
+  color: #172033;
+  font-family: Arial, sans-serif;
+  min-width: 0;
+  width: 100%;
+}
+
+.intern-module-wrapper,
+.intern-module-wrapper * {
+  box-sizing: border-box;
+}
+
+.intern-module-wrapper h1,
+.intern-module-wrapper h2,
+.intern-module-wrapper h3,
+.intern-module-wrapper h4 {
+  color: #17243b;
+  line-height: 1.3;
+}
+
+.intern-module-wrapper h1 {
+  margin: 0 0 10px;
+  font-size: 27px;
+  font-weight: 700;
+}
+
+.intern-module-wrapper h2 {
+  margin: 0 0 10px;
+  font-size: 23px;
+  font-weight: 700;
+}
+
+.intern-module-wrapper h3 {
+  margin: 22px 0 13px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.intern-module-wrapper h4 {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.intern-module-wrapper p {
+  color: #68778d;
+  line-height: 1.6;
+}
+
+.intern-module-wrapper a {
+  color: #315b9d;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.intern-module-wrapper a:hover {
+  color: #193b70;
+  text-decoration: underline;
+}
+
+.intern-module-wrapper button,
+.intern-module-wrapper input,
+.intern-module-wrapper select,
+.intern-module-wrapper textarea {
+  font: inherit;
+}
+
+.intern-module-wrapper button {
+  min-height: 36px;
+  padding: 9px 14px;
+  border: 1px solid #d5dfed;
+  border-radius: 7px;
+  background: #fff;
+  color: #34445d;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+
+.intern-module-wrapper button:hover {
+  background: #f0f5ff;
+  border-color: #a9bee0;
+  color: #244b87;
+}
+
+.intern-module-wrapper button:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+.intern-module-wrapper input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.intern-module-wrapper select,
+.intern-module-wrapper textarea {
+  width: auto;
+  min-height: 38px;
+  padding: 9px 11px;
+  border: 1px solid #d9e1ec;
+  border-radius: 7px;
+  background: #fff;
+  color: #27364d;
+  font-size: 12px;
+  outline: none;
+}
+
+.intern-module-wrapper textarea {
+  width: 100%;
+  min-height: 100px;
+  resize: vertical;
+}
+
+.intern-module-wrapper input:focus,
+.intern-module-wrapper select:focus,
+.intern-module-wrapper textarea:focus {
+  border-color: #7197d7;
+  box-shadow: 0 0 0 3px rgba(75, 121, 194, .11);
+}
+
+.intern-module-wrapper input[type="checkbox"],
+.intern-module-wrapper input[type="radio"] {
+  accent-color: #244b87;
+}
+
+.intern-module-wrapper input[type="file"] {
+  max-width: 100%;
+  font-size: 12px;
+}
+
+.intern-module-wrapper label {
+  display: block;
+  margin: 0 0 7px;
+  color: #43516a;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.intern-module-wrapper form {
+  display: grid;
+  gap: 16px;
+  max-width: 900px;
+  padding: 24px;
+  border: 1px solid #e4eaf3;
+  border-radius: 11px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(24, 42, 72, .025);
+}
+
+.intern-module-wrapper form > div {
+  min-width: 0;
+}
+
+.intern-module-wrapper form input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.intern-module-wrapper form select,
+.intern-module-wrapper form textarea {
+  width: 100%;
+}
+
+.intern-module-wrapper form button[type="submit"],
+.intern-module-wrapper form button.primary,
+.intern-module-wrapper .primary-button {
+  border-color: #244b87;
+  background: #244b87;
+  color: #fff;
+}
+
+.intern-module-wrapper form button[type="submit"]:hover,
+.intern-module-wrapper form button.primary:hover,
+.intern-module-wrapper .primary-button:hover {
+  border-color: #193b70;
+  background: #193b70;
+  color: #fff;
+}
+
+.intern-module-wrapper table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  font-size: 12px;
+}
+
+.intern-module-wrapper table th {
+  padding: 13px 12px;
+  background: #f8f9fc;
+  border-bottom: 1px solid #e5eaf2;
+  color: #7e8ba0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .4px;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.intern-module-wrapper table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid #edf1f6;
+  color: #56647a;
+  vertical-align: middle;
+}
+
+.intern-module-wrapper table tr:last-child td {
+  border-bottom: 0;
+}
+
+.intern-module-wrapper table tbody tr:hover {
+  background: #fafcff;
+}
+
+.intern-module-wrapper ul {
+  padding-left: 22px;
+}
+
+.intern-module-wrapper [role="alert"],
+.intern-module-wrapper .error-message,
+.intern-module-wrapper .error {
+  color: #a33b3b;
+}
+
+.intern-module-wrapper .success-message,
+.intern-module-wrapper .success {
+  color: #24794e;
+}
+
+/* Improve common page/list layouts without relying on intern-specific class names. */
+.intern-module-wrapper > * {
+  min-width: 0;
+}
+
+.intern-module-wrapper > div > table,
+.intern-module-wrapper table {
+  border: 1px solid #e9edf4;
+  border-radius: 9px;
+  overflow: hidden;
+}
+
+.intern-module-wrapper .empty-state,
+.intern-module-wrapper [class*="empty-state"],
+.intern-module-wrapper [class*="EmptyState"] {
+  padding: 36px 20px;
+  border: 1px dashed #dce4ef;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .72);
+  color: #7e8ba0;
+  text-align: center;
+}
+
+/* Safety dashboard: arrange metric cards in a responsive grid. */
+.intern-module-wrapper .dashboard-stats,
+.intern-module-wrapper .stats-grid,
+.intern-module-wrapper .metrics-grid,
+.intern-module-wrapper .stat-grid,
+.intern-module-wrapper .stats-container {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin: 18px 0 24px;
+}
+
+.intern-module-wrapper .dashboard-stats > *,
+.intern-module-wrapper .stats-grid > *,
+.intern-module-wrapper .metrics-grid > *,
+.intern-module-wrapper .stat-grid > *,
+.intern-module-wrapper .stats-container > * {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid #e5eaf2;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(24, 42, 72, .025);
+}
+
+.intern-module-wrapper .card,
+.intern-module-wrapper .panel,
+.intern-module-wrapper .section-card {
+  border: 1px solid #e5eaf2;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(24, 42, 72, .025);
+}
+
+.intern-module-wrapper .card,
+.intern-module-wrapper .panel,
+.intern-module-wrapper .section-card {
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 1000px) {
+  .intern-module-wrapper .dashboard-stats,
+  .intern-module-wrapper .stats-grid,
+  .intern-module-wrapper .metrics-grid,
+  .intern-module-wrapper .stat-grid,
+  .intern-module-wrapper .stats-container {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .intern-module-wrapper h1 {
+    font-size: 23px;
+  }
+
+  .intern-module-wrapper h2 {
+    font-size: 20px;
+  }
+
+  .intern-module-wrapper form {
+    padding: 16px;
+  }
+
+  .intern-module-wrapper .dashboard-stats,
+  .intern-module-wrapper .stats-grid,
+  .intern-module-wrapper .metrics-grid,
+  .intern-module-wrapper .stat-grid,
+  .intern-module-wrapper .stats-container {
+    grid-template-columns: 1fr;
+  }
+
+  .intern-module-wrapper table {
+    min-width: 650px;
+  }
+
+  .intern-module-wrapper > div:has(> table) {
+    overflow-x: auto;
+  }
+}
+
+/* Simplify statistic cards across intern safety modules */
+.intern-module-wrapper .stat-card {
+  border: 1px solid #e5eaf2 !important;
+  border-top: 1px solid #e5eaf2 !important;
+  box-shadow: none !important;
+  border-radius: 10px;
+  background: #fff;
+}
+
+
+/* Fire Extinguishers summary cards */
+.intern-module-wrapper .stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0 24px;
+}
+
+.intern-module-wrapper .stat-grid > .stat-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  min-height: 90px;
+  padding: 18px;
+  border: 1px solid #e5eaf2;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: none;
+}
+
+.intern-module-wrapper .stat-grid > .stat-card .stat-number {
+  font-size: 25px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #17243b;
+}
+
+.intern-module-wrapper .stat-grid > .stat-card .stat-label {
+  font-size: 12px;
+  color: #68778d;
+}
+
+@media (max-width: 760px) {
+  .intern-module-wrapper .stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Match the Company Admin sidebar to Super Admin branding */
+
+.ca-sidebar {
+  background: #112b43;
+  padding: 20px 14px 14px;
+}
+
+
+.ca-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 0 10px 35px;
+}
+
+.ca-sidebar-brand img {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: white;
+  padding: 3px;
+  flex-shrink: 0;
+}
+
+.ca-sidebar-brand > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.ca-sidebar-brand strong {
+  display: block;
+  font-size: 15px;
+  letter-spacing: 0.4px;
+  line-height: normal;
+}
+
+.ca-sidebar-brand span {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: #b9c8d6;
+  line-height: normal;
+}
+
+
+.ca-sidebar-label {
+  padding: 0 9px;
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+}
+
+.ca-sidebar-nav {
+  gap: 5px;
+}
+
+.ca-nav-item {
+  min-height: 42px;
+  padding: 11px 12px;
+  gap: 11px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.ca-nav-item:hover,
+.ca-nav-item.active {
+  background: #294963;
+  color: #ffffff;
+}
+
+.ca-nav-item.active {
+  box-shadow: none;
+}
+
+.ca-sidebar-bottom {
+  padding: 16px 0 0;
+  border-top-color: #30485d;
+}
+
+.ca-sidebar-user {
+  gap: 9px;
+  padding: 0 5px 14px;
+}
+
+.ca-avatar {
+  width: 32px;
+  height: 32px;
+}
+
+.ca-logout-button {
+  padding: 10px;
+  border-color: #456075;
+  border-radius: 6px;
+  font-size: 11px;
+}
+
+.ca-logout-button:hover {
+  background: #294963;
+}
+
+@media (max-width: 760px) {
+  .ca-sidebar {
+    padding: 20px 8px;
+  }
+}

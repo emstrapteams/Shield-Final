@@ -1,3 +1,5 @@
+
+const mongoose = require("mongoose");
 const Company = require("../models/Company");
 
 // Create Company
@@ -12,8 +14,10 @@ const createCompany = async (req, res) => {
       });
     }
 
+    const normalizedCode = code.trim().toUpperCase();
+
     const existingCompany = await Company.findOne({
-      code: code.trim().toUpperCase(),
+      code: normalizedCode,
     });
 
     if (existingCompany) {
@@ -25,15 +29,13 @@ const createCompany = async (req, res) => {
 
     const company = await Company.create({
       name: name.trim(),
-      code: code.trim().toUpperCase(),
+      code: normalizedCode,
     });
 
     return res.status(201).json({
       success: true,
       message: "Company created successfully.",
-      data: {
-        company,
-      },
+      data: { company },
     });
   } catch (error) {
     console.error("Create company error:", error);
@@ -52,9 +54,7 @@ const getCompanies = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      data: {
-        companies,
-      },
+      data: { companies },
     });
   } catch (error) {
     console.error("Get companies error:", error);
@@ -69,7 +69,16 @@ const getCompanies = async (req, res) => {
 // Get Company by ID
 const getCompanyById = async (req, res) => {
   try {
-    const company = await Company.findById(req.params.id);
+    const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid company ID.",
+      });
+    }
+
+    const company = await Company.findById(id);
 
     if (!company) {
       return res.status(404).json({
@@ -80,9 +89,7 @@ const getCompanyById = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      data: {
-        company,
-      },
+      data: { company },
     });
   } catch (error) {
     console.error("Get company error:", error);
@@ -97,9 +104,17 @@ const getCompanyById = async (req, res) => {
 // Update Company
 const updateCompany = async (req, res) => {
   try {
+    const { id } = req.params;
     const { name, code } = req.body;
 
-    const company = await Company.findById(req.params.id);
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid company ID.",
+      });
+    }
+
+    const company = await Company.findById(id);
 
     if (!company) {
       return res.status(404).json({
@@ -135,9 +150,7 @@ const updateCompany = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Company updated successfully.",
-      data: {
-        company,
-      },
+      data: { company },
     });
   } catch (error) {
     console.error("Update company error:", error);
@@ -152,9 +165,14 @@ const updateCompany = async (req, res) => {
 // Update Company Status
 const updateCompanyStatus = async (req, res) => {
   try {
+    const { id } = req.params;
     const { status } = req.body;
 
-    const allowedStatuses = ["active", "suspended", "deactivated"];
+    const allowedStatuses = [
+      "active",
+      "suspended",
+      "deactivated",
+    ];
 
     if (!allowedStatuses.includes(status)) {
       return res.status(400).json({
@@ -163,7 +181,14 @@ const updateCompanyStatus = async (req, res) => {
       });
     }
 
-    const company = await Company.findById(req.params.id);
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid company ID.",
+      });
+    }
+
+    const company = await Company.findById(id);
 
     if (!company) {
       return res.status(404).json({
@@ -179,9 +204,7 @@ const updateCompanyStatus = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Company status updated successfully.",
-      data: {
-        company,
-      },
+      data: { company },
     });
   } catch (error) {
     console.error("Update company status error:", error);

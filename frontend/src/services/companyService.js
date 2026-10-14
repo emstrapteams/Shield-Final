@@ -12,7 +12,6 @@ const companyAPI = axios.create({
   },
 });
 
-// Attach JWT to every company request
 companyAPI.interceptors.request.use((config) => {
   const token = getStoredToken();
 
@@ -34,13 +33,24 @@ export const createCompany = async (companyData) => {
 };
 
 export const updateCompany = async (id, companyData) => {
-  const response = await companyAPI.put(`/companies/${id}`, companyData);
+  const response = await companyAPI.put(
+    `/companies/${id}`,
+    companyData
+  );
+
   return response.data;
 };
 
 export const updateCompanyStatus = async (id, status) => {
-  const response = await companyAPI.patch(`/companies/${id}/status`, {
-    status,
-  });
+  const response = await companyAPI.patch(
+    `/companies/${id}/status`,
+    { status }
+  );
+
+  return response.data;
+};
+
+export const getCompanyAdmins = async () => {
+  const response = await companyAPI.get("/companies/admins");
   return response.data;
 };

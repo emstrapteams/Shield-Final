@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import logo from "../assets/logo.png";
 import { logoutUser, getStoredToken } from "../services/authService";
 import {
@@ -10,6 +11,45 @@ import {
 } from "../services/emergencyService";
 import { connectSocket, disconnectSocket } from "../services/socketService";
 import "./CompanyAdminDashboard.css";
+
+import Dashboard from "../intern-pages/Dashboard";
+import Employees from "../intern-pages/Employees";
+import Departments from "../intern-pages/Departments";
+import Facilities from "../intern-pages/Facilities";
+import Equipment from "../intern-pages/Equipment";
+import FireExtinguishers from "../intern-pages/FireExtinguishers";
+import FirstAidKits from "../intern-pages/FirstAidKits";
+import Inspections from "../intern-pages/Inspections";
+import CorrectiveActions from "../intern-pages/CorrectiveActions";
+import EmergencyResources from "../intern-pages/EmergencyResources";
+import Drills from "../intern-pages/Drills";
+import TrainingPrograms from "../intern-pages/TrainingPrograms";
+import TrainingSessions from "../intern-pages/TrainingSessions";
+import Reports from "../intern-pages/Reports";
+import EmployeeForm from "../intern-pages/EmployeeForm";
+import EmployeeDetail from "../intern-pages/EmployeeDetail";
+import DepartmentForm from "../intern-pages/DepartmentForm";
+import DepartmentDetail from "../intern-pages/DepartmentDetail";
+import FacilityForm from "../intern-pages/FacilityForm";
+import FacilityDetail from "../intern-pages/FacilityDetail";
+import EquipmentForm from "../intern-pages/EquipmentForm";
+import EquipmentDetail from "../intern-pages/EquipmentDetail";
+import FireExtinguisherForm from "../intern-pages/FireExtinguisherForm";
+import FireExtinguisherDetail from "../intern-pages/FireExtinguisherDetail";
+import FirstAidKitForm from "../intern-pages/FirstAidKitForm";
+import FirstAidKitDetail from "../intern-pages/FirstAidKitDetail";
+import InspectionForm from "../intern-pages/InspectionForm";
+import InspectionDetail from "../intern-pages/InspectionDetail";
+import CorrectiveActionForm from "../intern-pages/CorrectiveActionForm";
+import CorrectiveActionDetail from "../intern-pages/CorrectiveActionDetail";
+import EmergencyResourceForm from "../intern-pages/EmergencyResourceForm";
+import EmergencyResourceDetail from "../intern-pages/EmergencyResourceDetail";
+import DrillForm from "../intern-pages/DrillForm";
+import DrillDetail from "../intern-pages/DrillDetail";
+import TrainingProgramForm from "../intern-pages/TrainingProgramForm";
+import TrainingProgramDetail from "../intern-pages/TrainingProgramDetail";
+import TrainingSessionForm from "../intern-pages/TrainingSessionForm";
+import TrainingSessionDetail from "../intern-pages/TrainingSessionDetail";
 
 const statusOptions = [
   "triggered",
@@ -56,7 +96,48 @@ function CompanyAdminDashboard({ user, onLogout }) {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [actionError, setActionError] = useState("");
-  const [activeSection, setActiveSection] = useState("overview");
+  
+const [activeSection, setActiveSection] = useState("overview");
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Keep the selected sidebar section synchronized with the browser URL.
+  useEffect(() => {
+    const pathname = location.pathname.replace(/\/+$/, "") || "/";
+
+    if (pathname === "/") {
+      setActiveSection("overview");
+      return;
+    }
+
+    if (pathname === "/emergencies") {
+      setActiveSection("emergencies");
+      return;
+    }
+
+    const sectionPaths = {
+      "/safety-dashboard": "safetyDashboard",
+      "/employees": "employees",
+      "/departments": "departments",
+      "/facilities": "facilities",
+      "/equipment": "equipment",
+      "/fire-extinguishers": "fireExtinguishers",
+      "/first-aid-kits": "firstAidKits",
+      "/inspections": "inspections",
+      "/corrective-actions": "correctiveActions",
+      "/emergency-resources": "emergencyResources",
+      "/drills": "drills",
+      "/training-programs": "trainingPrograms",
+      "/training-sessions": "trainingSessions",
+      "/reports": "reports",
+    };
+
+    const matchingPath = Object.keys(sectionPaths)
+      .sort((a, b) => b.length - a.length)
+      .find((basePath) => pathname === basePath || pathname.startsWith(`${basePath}/`));
+
+    setActiveSection(matchingPath ? sectionPaths[matchingPath] : "overview");
+  }, [location.pathname]);
 
   const [statusFilter, setStatusFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
@@ -204,6 +285,20 @@ useEffect(() => {
   const sectionTitles = {
     overview: "Company Admin Overview",
     emergencies: "Emergency Monitoring",
+    safetyDashboard: "Safety Dashboard",
+    employees: "Employee Management",
+    departments: "Department Management",
+    facilities: "Facility Management",
+    equipment: "Safety Equipment",
+    fireExtinguishers: "Fire Extinguisher Management",
+    firstAidKits: "First-Aid Kit Management",
+    inspections: "Safety Inspections",
+    correctiveActions: "Corrective Actions",
+    emergencyResources: "Emergency Resources",
+    drills: "Emergency Drills",
+    trainingPrograms: "Training Programs",
+    trainingSessions: "Training Sessions",
+    reports: "Safety Reports",
   };
 
   const performLifecycleAction = async (action) => {
@@ -324,6 +419,8 @@ useEffect(() => {
               setActiveSection("overview");
               setSelectedEmergency(null);
               setActionError("");
+              setError("");
+              navigate("/");
             }}
           >
             <span>▦</span> Overview
@@ -337,10 +434,58 @@ useEffect(() => {
               setActiveSection("emergencies");
               setSelectedEmergency(null);
               setActionError("");
+              setError("");
+              navigate("/emergencies");
             }}
           >
             <span>⚠</span> Emergencies
           </button>
+
+          {[
+            ["safetyDashboard", "Safety Dashboard", "▦"],
+            ["employees", "Employees", "♙"],
+            ["departments", "Departments", "▤"],
+            ["facilities", "Facilities", "⌂"],
+            ["equipment", "Safety Equipment", "⚙"],
+            ["fireExtinguishers", "Fire Extinguishers", "♨"],
+            ["firstAidKits", "First-Aid Kits", "+"],
+            ["inspections", "Inspections", "✓"],
+            ["correctiveActions", "Corrective Actions", "↗"],
+            ["emergencyResources", "Emergency Resources", "✚"],
+            ["drills", "Emergency Drills", "⚑"],
+            ["trainingPrograms", "Training Programs", "▣"],
+            ["trainingSessions", "Training Sessions", "▣"],
+            ["reports", "Reports", "▥"],
+          ].map(([section, label, icon]) => (
+            <button
+              key={section}
+              className={`ca-nav-item ${activeSection === section ? "active" : ""}`}
+              onClick={() => {
+                const paths = {
+                  safetyDashboard: "/safety-dashboard",
+                  employees: "/employees",
+                  departments: "/departments",
+                  facilities: "/facilities",
+                  equipment: "/equipment",
+                  fireExtinguishers: "/fire-extinguishers",
+                  firstAidKits: "/first-aid-kits",
+                  inspections: "/inspections",
+                  correctiveActions: "/corrective-actions",
+                  emergencyResources: "/emergency-resources",
+                  drills: "/drills",
+                  trainingPrograms: "/training-programs",
+                  trainingSessions: "/training-sessions",
+                  reports: "/reports",
+                };
+                setSelectedEmergency(null);
+                setActionError("");
+                setError("");
+                navigate(paths[section]);
+              }}
+            >
+              <span>{icon}</span> {label}
+            </button>
+          ))}
         </nav>
 
         <div className="ca-sidebar-bottom">
@@ -930,6 +1075,77 @@ useEffect(() => {
               )}
             </>
           )}
+
+          
+{activeSection !== "overview" && activeSection !== "emergencies" && (
+  <div className="intern-module-wrapper">
+    <Routes>
+      <Route path="/employees" element={<Employees />} />
+      <Route path="/employees/new" element={<EmployeeForm />} />
+      <Route path="/employees/:id/edit" element={<EmployeeForm />} />
+      <Route path="/employees/:id" element={<EmployeeDetail />} />
+
+      <Route path="/departments" element={<Departments />} />
+      <Route path="/departments/new" element={<DepartmentForm />} />
+      <Route path="/departments/:id/edit" element={<DepartmentForm />} />
+      <Route path="/departments/:id" element={<DepartmentDetail />} />
+
+      <Route path="/facilities" element={<Facilities />} />
+      <Route path="/facilities/new" element={<FacilityForm />} />
+      <Route path="/facilities/:id/edit" element={<FacilityForm />} />
+      <Route path="/facilities/:id" element={<FacilityDetail />} />
+
+      <Route path="/equipment" element={<Equipment />} />
+      <Route path="/equipment/new" element={<EquipmentForm />} />
+      <Route path="/equipment/:id/edit" element={<EquipmentForm />} />
+      <Route path="/equipment/:id" element={<EquipmentDetail />} />
+
+      <Route path="/fire-extinguishers" element={<FireExtinguishers />} />
+      <Route path="/fire-extinguishers/new" element={<FireExtinguisherForm />} />
+      <Route path="/fire-extinguishers/:id/edit" element={<FireExtinguisherForm />} />
+      <Route path="/fire-extinguishers/:id" element={<FireExtinguisherDetail />} />
+
+      <Route path="/first-aid-kits" element={<FirstAidKits />} />
+      <Route path="/first-aid-kits/new" element={<FirstAidKitForm />} />
+      <Route path="/first-aid-kits/:id/edit" element={<FirstAidKitForm />} />
+      <Route path="/first-aid-kits/:id" element={<FirstAidKitDetail />} />
+
+      <Route path="/inspections" element={<Inspections />} />
+      <Route path="/inspections/new" element={<InspectionForm />} />
+      <Route path="/inspections/:id" element={<InspectionDetail />} />
+
+      <Route path="/corrective-actions" element={<CorrectiveActions />} />
+      <Route path="/corrective-actions/new" element={<CorrectiveActionForm />} />
+      <Route path="/corrective-actions/:id/edit" element={<CorrectiveActionForm />} />
+      <Route path="/corrective-actions/:id" element={<CorrectiveActionDetail />} />
+
+      <Route path="/emergency-resources" element={<EmergencyResources />} />
+      <Route path="/emergency-resources/new" element={<EmergencyResourceForm />} />
+      <Route path="/emergency-resources/:id/edit" element={<EmergencyResourceForm />} />
+      <Route path="/emergency-resources/:id" element={<EmergencyResourceDetail />} />
+
+      <Route path="/drills" element={<Drills />} />
+      <Route path="/drills/new" element={<DrillForm />} />
+      <Route path="/drills/:id/edit" element={<DrillForm />} />
+      <Route path="/drills/:id" element={<DrillDetail />} />
+
+      <Route path="/training-programs" element={<TrainingPrograms />} />
+      <Route path="/training-programs/new" element={<TrainingProgramForm />} />
+      <Route path="/training-programs/:id/edit" element={<TrainingProgramForm />} />
+      <Route path="/training-programs/:id" element={<TrainingProgramDetail />} />
+
+      <Route path="/training-sessions" element={<TrainingSessions />} />
+      <Route path="/training-sessions/new" element={<TrainingSessionForm />} />
+      <Route path="/training-sessions/:id/edit" element={<TrainingSessionForm />} />
+      <Route path="/training-sessions/:id" element={<TrainingSessionDetail />} />
+
+      <Route path="/safety-dashboard" element={<Dashboard />} />
+      <Route path="/reports" element={<Reports />} />
+      <Route path="*" element={<Navigate to="/safety-dashboard" replace />} />
+    </Routes>
+  </div>
+)}
+
         </section>
       </main>
     </div>

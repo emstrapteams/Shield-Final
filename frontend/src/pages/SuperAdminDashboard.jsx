@@ -7,6 +7,7 @@ import {
   createCompany,
   updateCompany,
   updateCompanyStatus,
+  getCompanyAdmins,
 } from "../services/companyService";
 
 import { logoutUser } from "../services/authService";
@@ -15,6 +16,10 @@ import "./SuperAdminDashboard.css";
 function SuperAdminDashboard({ user, onLogout }) {
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [admins, setAdmins] = useState([]);
+  const [adminsLoading, setAdminsLoading] = useState(false);
+
   const [activeSection, setActiveSection] = useState("overview");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -32,7 +37,7 @@ function SuperAdminDashboard({ user, onLogout }) {
 
     try {
       const response = await getCompanies();
-      setCompanies(response.data.companies || []);
+      setCompanies(response.data?.companies || []);
     } catch (err) {
       setError(
         err.response?.data?.message || "Failed to load companies."
@@ -42,9 +47,32 @@ function SuperAdminDashboard({ user, onLogout }) {
     }
   };
 
+  const fetchAdmins = async () => {
+    setAdminsLoading(true);
+    setError("");
+
+    try {
+      const response = await getCompanyAdmins();
+      setAdmins(response.data?.admins || []);
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          "Failed to load Company Admins."
+      );
+    } finally {
+      setAdminsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchCompanies();
   }, []);
+
+  useEffect(() => {
+    if (activeSection === "administrators") {
+      fetchAdmins();
+    }
+  }, [activeSection]);
 
   const resetForm = () => {
     setName("");
@@ -125,7 +153,6 @@ function SuperAdminDashboard({ user, onLogout }) {
       await updateCompanyStatus(company._id, nextStatus);
 
       setSuccess(`${company.name} is now ${nextStatus}.`);
-
       await fetchCompanies();
     } catch (err) {
       setError(
@@ -154,6 +181,12 @@ function SuperAdminDashboard({ user, onLogout }) {
     settings: "Platform Settings",
   };
 
+  const selectSection = (section) => {
+    setActiveSection(section);
+    setError("");
+    setSuccess("");
+  };
+
   return (
     <div className="admin-layout">
       {/* Sidebar */}
@@ -171,20 +204,14 @@ function SuperAdminDashboard({ user, onLogout }) {
           </div>
         </div>
 
-        <div className="sidebar-section-label">
-          MAIN MENU
-        </div>
+        <div className="sidebar-section-label">MAIN MENU</div>
 
         <nav className="sidebar-nav">
           <button
             className={`nav-item ${
               activeSection === "overview" ? "active" : ""
             }`}
-            onClick={() => {
-              setActiveSection("overview");
-              setError("");
-              setSuccess("");
-            }}
+            onClick={() => selectSection("overview")}
           >
             <span>▦</span>
             Overview
@@ -194,11 +221,7 @@ function SuperAdminDashboard({ user, onLogout }) {
             className={`nav-item ${
               activeSection === "companies" ? "active" : ""
             }`}
-            onClick={() => {
-              setActiveSection("companies");
-              setError("");
-              setSuccess("");
-            }}
+            onClick={() => selectSection("companies")}
           >
             <span>▤</span>
             Companies
@@ -208,11 +231,7 @@ function SuperAdminDashboard({ user, onLogout }) {
             className={`nav-item ${
               activeSection === "administrators" ? "active" : ""
             }`}
-            onClick={() => {
-              setActiveSection("administrators");
-              setError("");
-              setSuccess("");
-            }}
+            onClick={() => selectSection("administrators")}
           >
             <span>♙</span>
             Administrators
@@ -222,11 +241,7 @@ function SuperAdminDashboard({ user, onLogout }) {
             className={`nav-item ${
               activeSection === "settings" ? "active" : ""
             }`}
-            onClick={() => {
-              setActiveSection("settings");
-              setError("");
-              setSuccess("");
-            }}
+            onClick={() => selectSection("settings")}
           >
             <span>⚙</span>
             Settings
@@ -236,19 +251,16 @@ function SuperAdminDashboard({ user, onLogout }) {
         <div className="sidebar-bottom">
           <div className="sidebar-user">
             <div className="user-avatar">
-              {user.name?.charAt(0).toUpperCase()}
+              {user?.name?.charAt(0).toUpperCase()}
             </div>
 
             <div className="user-info">
-              <strong>{user.name}</strong>
+              <strong>{user?.name}</strong>
               <span>Super Admin</span>
             </div>
           </div>
 
-          <button
-            className="logout-button"
-            onClick={handleLogout}
-          >
+          <button className="logout-button" onClick={handleLogout}>
             Log out
           </button>
         </div>
@@ -258,20 +270,17 @@ function SuperAdminDashboard({ user, onLogout }) {
       <main className="admin-main">
         <header className="admin-header">
           <div>
-            <span className="header-eyebrow">
-              WORKSPACE
-            </span>
-
+            <span className="header-eyebrow">WORKSPACE</span>
             <h1>{sectionTitles[activeSection]}</h1>
           </div>
 
           <div className="header-profile">
             <div className="header-avatar">
-              {user.name?.charAt(0).toUpperCase()}
+              {user?.name?.charAt(0).toUpperCase()}
             </div>
 
             <div>
-              <strong>{user.name}</strong>
+              <strong>{user?.name}</strong>
               <span>Super Admin</span>
             </div>
           </div>
@@ -280,19 +289,13 @@ function SuperAdminDashboard({ user, onLogout }) {
         <section className="admin-content">
           {/* Alerts */}
           {error && (
-            <div
-              className="dashboard-alert error"
-              role="alert"
-            >
+            <div className="dashboard-alert error" role="alert">
               {error}
             </div>
           )}
 
           {success && (
-            <div
-              className="dashboard-alert success"
-              role="status"
-            >
+            <div className="dashboard-alert success" role="status">
               {success}
             </div>
           )}
@@ -303,9 +306,8 @@ function SuperAdminDashboard({ user, onLogout }) {
               <div className="welcome-row">
                 <div>
                   <h2>
-                    Welcome back, {user.name?.split(" ")[0]}.
+                    Welcome back, {user?.name?.split(" ")[0]}.
                   </h2>
-
                   <p>
                     Manage organizations and platform access.
                   </p>
@@ -314,42 +316,24 @@ function SuperAdminDashboard({ user, onLogout }) {
 
               <div className="stats-grid">
                 <div className="stat-card">
-                  <div className="stat-icon total">
-                    ▤
-                  </div>
-
+                  <div className="stat-icon total">▤</div>
                   <span>Total Companies</span>
                   <strong>{companies.length}</strong>
-
-                  <small>
-                    Registered organizations
-                  </small>
+                  <small>Registered organizations</small>
                 </div>
 
                 <div className="stat-card">
-                  <div className="stat-icon active-icon">
-                    ✓
-                  </div>
-
+                  <div className="stat-icon active-icon">✓</div>
                   <span>Active Companies</span>
                   <strong>{activeCount}</strong>
-
-                  <small>
-                    Currently active
-                  </small>
+                  <small>Currently active</small>
                 </div>
 
                 <div className="stat-card">
-                  <div className="stat-icon suspended-icon">
-                    Ⅱ
-                  </div>
-
+                  <div className="stat-icon suspended-icon">Ⅱ</div>
                   <span>Suspended Companies</span>
                   <strong>{suspendedCount}</strong>
-
-                  <small>
-                    Access suspended
-                  </small>
+                  <small>Access suspended</small>
                 </div>
               </div>
             </>
@@ -361,7 +345,6 @@ function SuperAdminDashboard({ user, onLogout }) {
               <div className="welcome-row">
                 <div>
                   <h2>Company Management</h2>
-
                   <p>
                     Create, view, and manage registered organizations.
                   </p>
@@ -379,7 +362,6 @@ function SuperAdminDashboard({ user, onLogout }) {
                 <div className="panel-heading">
                   <div>
                     <h3>Registered Companies</h3>
-
                     <p>
                       View and manage registered organizations.
                     </p>
@@ -390,7 +372,7 @@ function SuperAdminDashboard({ user, onLogout }) {
                     onClick={fetchCompanies}
                     disabled={loading}
                   >
-                    ↻ Refresh
+                    {loading ? "Loading..." : "↻ Refresh"}
                   </button>
                 </div>
 
@@ -400,16 +382,11 @@ function SuperAdminDashboard({ user, onLogout }) {
                   </div>
                 ) : companies.length === 0 ? (
                   <div className="empty-state">
-                    <div className="empty-icon">
-                      ▤
-                    </div>
-
+                    <div className="empty-icon">▤</div>
                     <h4>No companies yet</h4>
-
                     <p>
                       Create your first company to get started.
                     </p>
-
                     <button
                       className="primary-button"
                       onClick={openCreateForm}
@@ -440,10 +417,7 @@ function SuperAdminDashboard({ user, onLogout }) {
                                     ?.charAt(0)
                                     .toUpperCase()}
                                 </div>
-
-                                <strong>
-                                  {company.name}
-                                </strong>
+                                <strong>{company.name}</strong>
                               </div>
                             </td>
 
@@ -462,9 +436,11 @@ function SuperAdminDashboard({ user, onLogout }) {
                             </td>
 
                             <td>
-                              {new Date(
-                                company.createdAt
-                              ).toLocaleDateString()}
+                              {company.createdAt
+                                ? new Date(
+                                    company.createdAt
+                                  ).toLocaleDateString()
+                                : "—"}
                             </td>
 
                             <td>
@@ -478,8 +454,7 @@ function SuperAdminDashboard({ user, onLogout }) {
                                   Edit
                                 </button>
 
-                                {company.status !==
-                                  "deactivated" && (
+                                {company.status !== "deactivated" && (
                                   <button
                                     className="status-action"
                                     onClick={() =>
@@ -508,26 +483,96 @@ function SuperAdminDashboard({ user, onLogout }) {
             <section className="companies-panel">
               <div className="panel-heading">
                 <div>
-                  <h3>Administrator Management</h3>
-
+                  <h3>Company Administrators</h3>
                   <p>
-                    Manage Company Admin accounts across registered organizations.
+                    View Company Admin accounts across registered
+                    organizations.
                   </p>
                 </div>
+
+                <button
+                  className="secondary-button"
+                  onClick={fetchAdmins}
+                  disabled={adminsLoading}
+                >
+                  {adminsLoading ? "Loading..." : "↻ Refresh"}
+                </button>
               </div>
 
-              <div className="empty-state">
-                <div className="empty-icon">
-                  ♙
+              {adminsLoading ? (
+                <div className="empty-state">
+                  Loading Company Admins...
                 </div>
+              ) : admins.length === 0 ? (
+                <div className="empty-state">
+                  <div className="empty-icon">♙</div>
+                  <h4>No Company Admins found</h4>
+                  <p>
+                    Company Admin accounts will appear here after
+                    they have been created.
+                  </p>
+                </div>
+              ) : (
+                <div className="table-wrapper">
+                  <table className="companies-table">
+                    <thead>
+                      <tr>
+                        <th>Administrator</th>
+                        <th>Email</th>
+                        <th>Company</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                      </tr>
+                    </thead>
 
-                <h4>Administrator Management</h4>
+                    <tbody>
+                      {admins.map((admin) => (
+                        <tr key={admin._id || admin.id}>
+                          <td>
+                            <div className="company-name">
+                              <div className="company-avatar">
+                                {admin.name
+                                  ?.charAt(0)
+                                  .toUpperCase()}
+                              </div>
+                              <strong>{admin.name || "—"}</strong>
+                            </div>
+                          </td>
 
-                <p>
-                  This section will allow Super Admins to provision
-                  and manage Company Admin accounts.
-                </p>
-              </div>
+                          <td>{admin.email || "—"}</td>
+
+                          <td>
+                            {typeof admin.company === "object"
+                              ? admin.company?.name || "—"
+                              : companies.find(
+                                  (company) =>
+                                    company._id === admin.company
+                                )?.name || "—"}
+                          </td>
+
+                          <td>
+                            <span
+                              className={`status-badge ${
+                                admin.status || "inactive"
+                              }`}
+                            >
+                              {admin.status || "Unknown"}
+                            </span>
+                          </td>
+
+                          <td>
+                            {admin.createdAt
+                              ? new Date(
+                                  admin.createdAt
+                                ).toLocaleDateString()
+                              : "—"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </section>
           )}
 
@@ -537,7 +582,6 @@ function SuperAdminDashboard({ user, onLogout }) {
               <div className="panel-heading">
                 <div>
                   <h3>Platform Settings</h3>
-
                   <p>
                     Configure your EMSTRAP Shield platform.
                   </p>
@@ -545,12 +589,8 @@ function SuperAdminDashboard({ user, onLogout }) {
               </div>
 
               <div className="empty-state">
-                <div className="empty-icon">
-                  ⚙
-                </div>
-
+                <div className="empty-icon">⚙</div>
                 <h4>Platform Settings</h4>
-
                 <p>
                   Platform configuration and account preferences
                   will be implemented here.
@@ -573,9 +613,7 @@ function SuperAdminDashboard({ user, onLogout }) {
             <div className="modal-heading">
               <div>
                 <h3 id="company-modal-title">
-                  {editingCompany
-                    ? "Edit Company"
-                    : "Create Company"}
+                  {editingCompany ? "Edit Company" : "Create Company"}
                 </h3>
 
                 <p>
@@ -596,16 +634,11 @@ function SuperAdminDashboard({ user, onLogout }) {
 
             <form onSubmit={handleSubmit}>
               <div className="form-group">
-                <label htmlFor="company-name">
-                  Company Name
-                </label>
-
+                <label htmlFor="company-name">Company Name</label>
                 <input
                   id="company-name"
                   value={name}
-                  onChange={(e) =>
-                    setName(e.target.value)
-                  }
+                  onChange={(e) => setName(e.target.value)}
                   placeholder="Enter company name"
                   required
                   maxLength={120}
@@ -613,10 +646,7 @@ function SuperAdminDashboard({ user, onLogout }) {
               </div>
 
               <div className="form-group">
-                <label htmlFor="company-code">
-                  Company Code
-                </label>
-
+                <label htmlFor="company-code">Company Code</label>
                 <input
                   id="company-code"
                   value={code}
@@ -627,7 +657,6 @@ function SuperAdminDashboard({ user, onLogout }) {
                   required
                   maxLength={30}
                 />
-
                 <small>
                   Use a unique code to identify this organization.
                 </small>

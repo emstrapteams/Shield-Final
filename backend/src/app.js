@@ -10,10 +10,24 @@ const companyIsolation = require("./middleware/companyIsolation");
 
 const app = express();
 
+// CORS configuration
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://shield-final-frontend-aipqcs8zj-emstrapteams-9636s-projects.vercel.app",
+];
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Origin not allowed by CORS"));
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
@@ -44,7 +58,7 @@ const trainingSessionRoutes = require("../intern-modules/routes/trainingSessionR
 const trainingAttendanceRoutes = require("../intern-modules/routes/trainingAttendanceRoutes");
 const trainingDashboardRoutes = require("../intern-modules/routes/trainingDashboardRoutes");
 
-// Ensure the database is connected before handling requests.
+// Connect to MongoDB before handling API requests.
 let dbPromise;
 
 app.use(async (req, res, next) => {
@@ -66,6 +80,7 @@ app.use(async (req, res, next) => {
   }
 });
 
+// Authentication
 app.use("/api/auth", authRoutes);
 
 app.get("/api/auth/me", protect, (req, res) => {
@@ -84,7 +99,7 @@ app.get("/api/auth/me", protect, (req, res) => {
   });
 });
 
-// Specific administrator routes must come before general company routes.
+// Company administration routes must come before general company routes.
 app.use("/api/companies", companyAdminRoutes);
 app.use("/api/companies", companyRoutes);
 
@@ -92,6 +107,7 @@ app.use("/api/employees", employeeAccountRoutes);
 app.use("/api/emergencies", emergencyRoutes);
 app.use("/api/reports", reportRoutes);
 
+// Access control for safety modules
 const safetyModuleAccess = [
   protect,
   authorize("company_admin"),
@@ -103,17 +119,46 @@ app.use("/api/departments", safetyModuleAccess, departmentRoutes);
 app.use("/api/facilities", safetyModuleAccess, facilityRoutes);
 app.use("/api/employees", safetyModuleAccess, safetyEmployeeRoutes);
 app.use("/api/equipment", safetyModuleAccess, equipmentRoutes);
-app.use("/api/fire-extinguishers", safetyModuleAccess, fireExtinguisherRoutes);
+app.use(
+  "/api/fire-extinguishers",
+  safetyModuleAccess,
+  fireExtinguisherRoutes
+);
 app.use("/api/first-aid-kits", safetyModuleAccess, firstAidKitRoutes);
 app.use("/api/inspections", safetyModuleAccess, inspectionRoutes);
-app.use("/api/corrective-actions", safetyModuleAccess, correctiveActionRoutes);
-app.use("/api/emergency-resources", safetyModuleAccess, emergencyResourceRoutes);
+app.use(
+  "/api/corrective-actions",
+  safetyModuleAccess,
+  correctiveActionRoutes
+);
+app.use(
+  "/api/emergency-resources",
+  safetyModuleAccess,
+  emergencyResourceRoutes
+);
 app.use("/api/drills", safetyModuleAccess, drillRoutes);
-app.use("/api/training-programs", safetyModuleAccess, trainingProgramRoutes);
-app.use("/api/training-sessions", safetyModuleAccess, trainingSessionRoutes);
-app.use("/api/training-attendance", safetyModuleAccess, trainingAttendanceRoutes);
-app.use("/api/training-dashboard", safetyModuleAccess, trainingDashboardRoutes);
+app.use(
+  "/api/training-programs",
+  safetyModuleAccess,
+  trainingProgramRoutes
+);
+app.use(
+  "/api/training-sessions",
+  safetyModuleAccess,
+  trainingSessionRoutes
+);
+app.use(
+  "/api/training-attendance",
+  safetyModuleAccess,
+  trainingAttendanceRoutes
+);
+app.use(
+  "/api/training-dashboard",
+  safetyModuleAccess,
+  trainingDashboardRoutes
+);
 
+// Health check
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,
@@ -121,6 +166,7 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+// 404 handler
 app.use((req, res) => {
   res.status(404).json({
     success: false,

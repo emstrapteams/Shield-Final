@@ -1,16 +1,18 @@
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
+const BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL ||
+  "https://shield-final-backend-598n35qwo-emstrapteams-9636s-projects.vercel.app"
+).replace(/\/+$/, "");
 
 function getAuthHeaders() {
   const token = sessionStorage.getItem("shield_token");
 
-  return token
-    ? { Authorization: `Bearer ${token}` }
-    : {};
+  return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 async function request(path, { method = "GET", body, params } = {}) {
-  let url = `${BASE_URL}${path}`;
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  let url = `${BASE_URL}${normalizedPath}`;
 
   if (params) {
     const qs = new URLSearchParams(
@@ -71,7 +73,8 @@ export async function downloadReport(
   params,
   fallbackFilename = "report"
 ) {
-  let url = `${BASE_URL}${path}`;
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  let url = `${BASE_URL}${normalizedPath}`;
 
   const qs = new URLSearchParams(
     Object.entries(params || {}).filter(

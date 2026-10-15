@@ -13,8 +13,8 @@ const app = express();
 // CORS configuration
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://shield-final-frontend-15s7rn9zb-emstrapteams-9636s-projects.vercel.app",
-  "https://shield-final-frontend-aipqcs8zj-emstrapteams-9636s-projects.vercel.app",
+  "https://shield-final-frontend.vercel.app",
+  "https://shield-final-frontend-goxwjz9eu-emstrapteams-9636s-projects.vercel.app",
 ];
 
 app.use(

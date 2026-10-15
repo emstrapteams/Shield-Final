@@ -1,3 +1,4 @@
+
 const express = require("express");
 
 const {
@@ -13,10 +14,7 @@ const router = express.Router();
 // Only authenticated Super Admins can access these routes
 router.use(protect);
 router.use(authorize("super_admin"));
-router.get("/admins", (req, res, next) => {
-  console.log("ADMIN LIST ROUTE HIT");
-  next();
-}, getCompanyAdmins);
+
 // List all Company Admins
 router.get("/admins", getCompanyAdmins);
 

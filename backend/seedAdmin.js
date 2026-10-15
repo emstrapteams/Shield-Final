@@ -7,6 +7,11 @@ const User = require("./src/models/User");
 const createSuperAdmin = async () => {
   try {
     await connectDB();
+    if (mongoose.connection.name !== "shield_db") {
+  throw new Error(
+    `Wrong database: ${mongoose.connection.name}. Expected shield_db.`
+  );
+}
 
     const name = process.env.SUPER_ADMIN_NAME;
     const email = process.env.SUPER_ADMIN_EMAIL;

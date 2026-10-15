@@ -1,15 +1,14 @@
 
 import { useEffect, useState } from "react";
 import logo from "../assets/logo.png";
-
 import {
   getCompanies,
   createCompany,
   updateCompany,
   updateCompanyStatus,
   getCompanyAdmins,
+  createCompanyAdmin,
 } from "../services/companyService";
-
 import { logoutUser } from "../services/authService";
 import "./SuperAdminDashboard.css";
 
@@ -22,14 +21,22 @@ function SuperAdminDashboard({ user, onLogout }) {
 
   const [activeSection, setActiveSection] = useState("overview");
   const [saving, setSaving] = useState(false);
+  const [adminSaving, setAdminSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // Company form state
   const [showForm, setShowForm] = useState(false);
   const [editingCompany, setEditingCompany] = useState(null);
-
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
+
+  // Company Admin form state
+  const [showAdminForm, setShowAdminForm] = useState(false);
+  const [adminName, setAdminName] = useState("");
+  const [adminEmail, setAdminEmail] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
+  const [adminCompanyId, setAdminCompanyId] = useState("");
 
   const fetchCompanies = async () => {
     setLoading(true);
@@ -37,7 +44,15 @@ function SuperAdminDashboard({ user, onLogout }) {
 
     try {
       const response = await getCompanies();
-      setCompanies(response.data?.companies || []);
+
+      // Support either { companies: [] } or { data: { companies: [] } }
+      const list =
+        response?.data?.companies ??
+        response?.companies ??
+        response?.data?.data?.companies ??
+        [];
+
+      setCompanies(Array.isArray(list) ? list : []);
     } catch (err) {
       setError(
         err.response?.data?.message || "Failed to load companies."
@@ -53,7 +68,15 @@ function SuperAdminDashboard({ user, onLogout }) {
 
     try {
       const response = await getCompanyAdmins();
-      setAdmins(response.data?.admins || []);
+
+      // Controller returns { success, data: { admins } }
+      const list =
+        response?.data?.admins ??
+        response?.admins ??
+        response?.data?.data?.admins ??
+        [];
+
+      setAdmins(Array.isArray(list) ? list : []);
     } catch (err) {
       setError(
         err.response?.data?.message ||
@@ -74,6 +97,7 @@ function SuperAdminDashboard({ user, onLogout }) {
     }
   }, [activeSection]);
 
+  // Company form functions
   const resetForm = () => {
     setName("");
     setCode("");
@@ -151,13 +175,77 @@ function SuperAdminDashboard({ user, onLogout }) {
 
     try {
       await updateCompanyStatus(company._id, nextStatus);
-
       setSuccess(`${company.name} is now ${nextStatus}.`);
       await fetchCompanies();
     } catch (err) {
       setError(
         err.response?.data?.message || "Unable to update status."
       );
+    }
+  };
+
+  // Company Admin form functions
+  const openAdminForm = () => {
+    setAdminName("");
+    setAdminEmail("");
+    setAdminPassword("");
+    setAdminCompanyId("");
+    setError("");
+    setSuccess("");
+    setShowAdminForm(true);
+  };
+
+  const closeAdminForm = () => {
+    if (adminSaving) return;
+
+    setShowAdminForm(false);
+    setAdminName("");
+    setAdminEmail("");
+    setAdminPassword("");
+    setAdminCompanyId("");
+  };
+
+  const handleCreateAdmin = async (e) => {
+    e.preventDefault();
+
+    setError("");
+    setSuccess("");
+
+    if (!adminCompanyId) {
+      setError("Please select a company.");
+      return;
+    }
+
+    if (adminPassword.length < 8) {
+      setError("Password must contain at least 8 characters.");
+      return;
+    }
+
+    setAdminSaving(true);
+
+    try {
+      await createCompanyAdmin(adminCompanyId, {
+        name: adminName.trim(),
+        email: adminEmail.trim().toLowerCase(),
+        password: adminPassword,
+      });
+
+      setShowAdminForm(false);
+      setAdminName("");
+      setAdminEmail("");
+      setAdminPassword("");
+      setAdminCompanyId("");
+
+      setSuccess("Company Admin created successfully.");
+
+      await fetchAdmins();
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          "Unable to create Company Admin."
+      );
+    } finally {
+      setAdminSaving(false);
     }
   };
 
@@ -186,6 +274,10 @@ function SuperAdminDashboard({ user, onLogout }) {
     setError("");
     setSuccess("");
   };
+
+  const activeCompanies = companies.filter(
+    (company) => company.status === "active"
+  );
 
   return (
     <div className="admin-layout">
@@ -260,13 +352,16 @@ function SuperAdminDashboard({ user, onLogout }) {
             </div>
           </div>
 
-          <button className="logout-button" onClick={handleLogout}>
+          <button
+            className="logout-button"
+            onClick={handleLogout}
+          >
             Log out
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
+      {/* Main content */}
       <main className="admin-main">
         <header className="admin-header">
           <div>
@@ -300,7 +395,7 @@ function SuperAdminDashboard({ user, onLogout }) {
             </div>
           )}
 
-          {/* OVERVIEW */}
+          {/* Overview */}
           {activeSection === "overview" && (
             <>
               <div className="welcome-row">
@@ -339,7 +434,7 @@ function SuperAdminDashboard({ user, onLogout }) {
             </>
           )}
 
-          {/* COMPANIES */}
+          {/* Companies */}
           {activeSection === "companies" && (
             <>
               <div className="welcome-row">
@@ -478,26 +573,48 @@ function SuperAdminDashboard({ user, onLogout }) {
             </>
           )}
 
-          {/* ADMINISTRATORS */}
+          {/* Administrators */}
           {activeSection === "administrators" && (
             <section className="companies-panel">
               <div className="panel-heading">
                 <div>
                   <h3>Company Administrators</h3>
                   <p>
-                    View Company Admin accounts across registered
-                    organizations.
+                    View and manage Company Admin accounts across
+                    registered organizations.
                   </p>
                 </div>
 
-                <button
-                  className="secondary-button"
-                  onClick={fetchAdmins}
-                  disabled={adminsLoading}
-                >
-                  {adminsLoading ? "Loading..." : "↻ Refresh"}
-                </button>
+                <div className="table-actions">
+                  <button
+                    className="primary-button"
+                    onClick={openAdminForm}
+                    disabled={activeCompanies.length === 0}
+                    title={
+                      activeCompanies.length === 0
+                        ? "Create an active company first"
+                        : "Create a Company Admin"
+                    }
+                  >
+                    + Add Administrator
+                  </button>
+
+                  <button
+                    className="secondary-button"
+                    onClick={fetchAdmins}
+                    disabled={adminsLoading}
+                  >
+                    {adminsLoading ? "Loading..." : "↻ Refresh"}
+                  </button>
+                </div>
               </div>
+
+              {activeCompanies.length === 0 && (
+                <div className="empty-state">
+                  No active companies are available. Create or activate
+                  a company before adding an administrator.
+                </div>
+              )}
 
               {adminsLoading ? (
                 <div className="empty-state">
@@ -508,9 +625,17 @@ function SuperAdminDashboard({ user, onLogout }) {
                   <div className="empty-icon">♙</div>
                   <h4>No Company Admins found</h4>
                   <p>
-                    Company Admin accounts will appear here after
-                    they have been created.
+                    Create a Company Admin account to give an
+                    organization access to Shield.
                   </p>
+                  {activeCompanies.length > 0 && (
+                    <button
+                      className="primary-button"
+                      onClick={openAdminForm}
+                    >
+                      + Add Administrator
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="table-wrapper">
@@ -576,7 +701,7 @@ function SuperAdminDashboard({ user, onLogout }) {
             </section>
           )}
 
-          {/* SETTINGS */}
+          {/* Settings */}
           {activeSection === "settings" && (
             <section className="companies-panel">
               <div className="panel-heading">
@@ -601,7 +726,7 @@ function SuperAdminDashboard({ user, onLogout }) {
         </section>
       </main>
 
-      {/* COMPANY CREATE / EDIT MODAL */}
+      {/* Create / Edit Company Modal */}
       {showForm && (
         <div className="modal-overlay">
           <section
@@ -615,7 +740,6 @@ function SuperAdminDashboard({ user, onLogout }) {
                 <h3 id="company-modal-title">
                   {editingCompany ? "Edit Company" : "Create Company"}
                 </h3>
-
                 <p>
                   {editingCompany
                     ? "Update organization details."
@@ -624,6 +748,7 @@ function SuperAdminDashboard({ user, onLogout }) {
               </div>
 
               <button
+                type="button"
                 className="modal-close"
                 onClick={resetForm}
                 aria-label="Close"
@@ -667,6 +792,7 @@ function SuperAdminDashboard({ user, onLogout }) {
                   type="button"
                   className="secondary-button"
                   onClick={resetForm}
+                  disabled={saving}
                 >
                   Cancel
                 </button>
@@ -681,6 +807,133 @@ function SuperAdminDashboard({ user, onLogout }) {
                     : editingCompany
                       ? "Save Changes"
                       : "Create Company"}
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
+
+      {/* Create Company Admin Modal */}
+      {showAdminForm && (
+        <div className="modal-overlay">
+          <section
+            className="company-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="admin-modal-title"
+          >
+            <div className="modal-heading">
+              <div>
+                <h3 id="admin-modal-title">
+                  Create Company Admin
+                </h3>
+                <p>
+                  Create login credentials for a company administrator.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className="modal-close"
+                onClick={closeAdminForm}
+                disabled={adminSaving}
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateAdmin}>
+              <div className="form-group">
+                <label htmlFor="admin-name">Full Name</label>
+                <input
+                  id="admin-name"
+                  type="text"
+                  value={adminName}
+                  onChange={(e) => setAdminName(e.target.value)}
+                  placeholder="Enter full name"
+                  required
+                  maxLength={120}
+                  autoComplete="name"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="admin-email">Email Address</label>
+                <input
+                  id="admin-email"
+                  type="email"
+                  value={adminEmail}
+                  onChange={(e) => setAdminEmail(e.target.value)}
+                  placeholder="admin@company.com"
+                  required
+                  autoComplete="email"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="admin-password">
+                  Initial Password
+                </label>
+                <input
+                  id="admin-password"
+                  type="password"
+                  value={adminPassword}
+                  onChange={(e) =>
+                    setAdminPassword(e.target.value)
+                  }
+                  placeholder="At least 8 characters"
+                  minLength={8}
+                  required
+                  autoComplete="new-password"
+                />
+                <small>
+                  Use a strong password and share it securely with the
+                  administrator.
+                </small>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="admin-company">Company</label>
+                <select
+                  id="admin-company"
+                  value={adminCompanyId}
+                  onChange={(e) =>
+                    setAdminCompanyId(e.target.value)
+                  }
+                  required
+                >
+                  <option value="">Select a company</option>
+                  {activeCompanies.map((company) => (
+                    <option
+                      key={company._id}
+                      value={company._id}
+                    >
+                      {company.name} ({company.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={closeAdminForm}
+                  disabled={adminSaving}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="primary-button"
+                  disabled={adminSaving || activeCompanies.length === 0}
+                >
+                  {adminSaving
+                    ? "Creating..."
+                    : "Create Administrator"}
                 </button>
               </div>
             </form>

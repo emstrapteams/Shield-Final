@@ -1,8 +1,10 @@
 
+
 const BASE_URL = (
   import.meta.env.VITE_API_BASE_URL ||
-  "https://shield-final-backend-598n35qwo-emstrapteams-9636s-projects.vercel.app"
+  "http://localhost:5000/api"
 ).replace(/\/+$/, "");
+
 
 function getAuthHeaders() {
   const token = sessionStorage.getItem("shield_token");

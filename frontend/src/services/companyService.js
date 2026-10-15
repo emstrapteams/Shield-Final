@@ -54,3 +54,12 @@ export const getCompanyAdmins = async () => {
   const response = await companyAPI.get("/companies/admins");
   return response.data;
 };
+
+export const createCompanyAdmin = async (companyId, adminData) => {
+  const response = await companyAPI.post(
+    `/companies/${companyId}/admin`,
+    adminData
+  );
+
+  return response.data;
+};

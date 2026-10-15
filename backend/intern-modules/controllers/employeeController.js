@@ -1,3 +1,5 @@
+const User = require("../../src/models/User");
+const mongoose = require("mongoose");
 const Employee = require("../models/Employee");
 const Department = require("../models/Department");
 const Facility = require("../models/Facility");
@@ -13,15 +15,105 @@ const scopedFilter = (req, extra = {}) => {
 };
 
 // POST /api/employees
+// POST /api/employees
 const createEmployee = asyncHandler(async (req, res) => {
-  if (!req.companyId) return fail(res, 400, "A companyId is required to create an employee.");
+  if (!req.companyId) {
+    return fail(res, 400, "A companyId is required to create an employee.");
+  }
 
-  const payload = { ...req.body, company: req.companyId };
-  const employee = await Employee.create(payload);
-  employee.history.push({ action: "created", detail: "Employee record created." });
-  await employee.save();
+  const {
+    password,
+    employeeId,
+    name,
+    email,
+    phone,
+    department,
+    facility,
+    designation,
+    joiningDate,
+    emergencyContact,
+    status,
+  } = req.body;
 
-  return created(res, employee);
+  if (!password || typeof password !== "string" || password.length < 8) {
+    return fail(res, 400, "A password of at least 8 characters is required.");
+  }
+
+  if (!name?.trim() || !email?.trim() || !employeeId?.trim() || !phone?.trim()) {
+    return fail(
+      res,
+      400,
+      "Employee ID, name, email and phone are required."
+    );
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+
+  // Prevent duplicate login accounts.
+  const existingUser = await User.findOne({ email: normalizedEmail });
+  if (existingUser) {
+    return fail(res, 409, "A login account with this email already exists.");
+  }
+
+  // Check employee duplicates within this company.
+  const existingEmployee = await Employee.findOne({
+    company: req.companyId,
+    $or: [
+      { employeeId: employeeId.trim() },
+      { email: normalizedEmail },
+    ],
+  });
+
+  if (existingEmployee) {
+    return fail(
+      res,
+      409,
+      "An employee with this ID or email already exists in your company."
+    );
+  }
+
+  let employee;
+
+  try {
+    // Create the employee profile.
+    employee = await Employee.create({
+      employeeId: employeeId.trim(),
+      name: name.trim(),
+      email: normalizedEmail,
+      phone: phone.trim(),
+      department: department || null,
+      facility: facility || null,
+      designation: designation || "",
+      joiningDate: joiningDate || undefined,
+      emergencyContact: emergencyContact || {},
+      status: status || "active",
+      company: req.companyId,
+      history: [{ action: "created", detail: "Employee record created." }],
+    });
+
+    // Create the login account. User.js hashes the password automatically.
+    await User.create({
+      name: name.trim(),
+      email: normalizedEmail,
+      password,
+      role: "employee",
+      company: req.companyId,
+      status: "active",
+    });
+
+    return created(res, employee);
+  } catch (error) {
+    // If account creation fails, remove the profile created above.
+    if (employee) {
+      await Employee.deleteOne({ _id: employee._id }).catch(() => {});
+    }
+
+    if (error.code === 11000) {
+      return fail(res, 409, "An employee or account with these details already exists.");
+    }
+
+    throw error;
+  }
 });
 
 // GET /api/employees?search=&department=&facility=&status=&page=&limit=

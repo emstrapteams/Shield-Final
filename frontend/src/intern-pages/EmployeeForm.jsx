@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../intern-api/client";
 
 const emptyForm = {
-  employeeId: "", name: "", email: "", phone: "",
+  employeeId: "", name: "", email: "", password: "", phone: "",
   department: "", facility: "", designation: "", joiningDate: "",
   emergencyContactName: "", emergencyContactPhone: "", emergencyContactRelationship: "",
   status: "active",
@@ -59,6 +59,7 @@ export default function EmployeeForm() {
       employeeId: form.employeeId,
       name: form.name,
       email: form.email,
+      password: form.password,
       phone: form.phone,
       department: form.department || null,
       facility: form.facility || null,
@@ -112,6 +113,17 @@ export default function EmployeeForm() {
             <span>Email *</span>
             <input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} required />
           </label>
+          <label className="field">
+  <span>Temporary Password *</span>
+  <input
+    type="password"
+    value={form.password}
+    onChange={(e) => update("password", e.target.value)}
+    minLength={8}
+    autoComplete="new-password"
+    required={!isEdit}
+  />
+</label>
           <label className="field">
             <span>Phone *</span>
             <input value={form.phone} onChange={(e) => update("phone", e.target.value)} required />

@@ -11,6 +11,7 @@ const companyIsolation = require("./middleware/companyIsolation");
 const app = express();
 
 // CORS configuration
+
 const allowedOrigins = [
   "http://localhost:5173",
   "https://shield-final-frontend.vercel.app",
@@ -35,31 +36,13 @@ const corsOptions = {
   optionsSuccessStatus: 204,
 };
 
+// Apply the same CORS configuration to every request and preflight.
 app.use(cors(corsOptions));
 app.options(/.*/, cors(corsOptions));
 
-
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-
-      return callback(new Error("Origin not allowed by CORS"));
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    optionsSuccessStatus: 204,
-  })
-);
-
-// Handle preflight requests
-app.options(/.*/, cors());
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
 
 // Routes
 const authRoutes = require("./routes/authRoutes");

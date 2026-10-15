@@ -2,7 +2,8 @@
 import axios from "axios";
 
 const API_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+  import.meta.env.VITE_API_URL ||
+  "https://shield-final-backend-598n35qwo-emstrapteams-9636s-projects.vercel.app/api";
 
 const authAPI = axios.create({
   baseURL: API_URL,

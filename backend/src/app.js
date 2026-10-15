@@ -12,13 +12,10 @@ const app = express();
 
 // CORS configuration
 
+
 const allowedOrigins = [
   "http://localhost:5173",
   "https://shield-final-frontend.vercel.app",
-  ...(process.env.FRONTEND_URL || "")
-    .split(",")
-    .map((origin) => origin.trim().replace(/\/+$/, ""))
-    .filter(Boolean),
 ];
 
 const corsOptions = {
@@ -36,9 +33,9 @@ const corsOptions = {
   optionsSuccessStatus: 204,
 };
 
-// Apply the same CORS configuration to every request and preflight.
 app.use(cors(corsOptions));
 app.options(/.*/, cors(corsOptions));
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

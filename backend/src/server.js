@@ -37,6 +37,7 @@ const trainingProgramRoutes = require("../intern-modules/routes/trainingProgramR
 const trainingSessionRoutes = require("../intern-modules/routes/trainingSessionRoutes");
 const trainingAttendanceRoutes = require("../intern-modules/routes/trainingAttendanceRoutes");
 const trainingDashboardRoutes = require("../intern-modules/routes/trainingDashboardRoutes");
+const superAdminCompanyViewRoutes = require("../intern-modules/routes/superAdminCompanyViewRoutes");
 
 // -----------------------------
 // Middleware
@@ -105,6 +106,7 @@ app.use("/api/training-programs", safetyModuleAccess, trainingProgramRoutes);
 app.use("/api/training-sessions", safetyModuleAccess, trainingSessionRoutes);
 app.use("/api/training-attendance", safetyModuleAccess, trainingAttendanceRoutes);
 app.use("/api/training-dashboard", safetyModuleAccess, trainingDashboardRoutes);
+app.use("/api/super-admin/companies", superAdminCompanyViewRoutes);
 
 // -----------------------------s
 // Health Check

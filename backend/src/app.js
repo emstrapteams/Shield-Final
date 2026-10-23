@@ -64,6 +64,7 @@ const trainingProgramRoutes = require("../intern-modules/routes/trainingProgramR
 const trainingSessionRoutes = require("../intern-modules/routes/trainingSessionRoutes");
 const trainingAttendanceRoutes = require("../intern-modules/routes/trainingAttendanceRoutes");
 const trainingDashboardRoutes = require("../intern-modules/routes/trainingDashboardRoutes");
+const superAdminCompanyViewRoutes = require("../intern-modules/routes/superAdminCompanyViewRoutes");
 
 // Connect to MongoDB before handling API requests
 let dbPromise;
@@ -173,6 +174,11 @@ app.use(
   "/api/training-dashboard",
   safetyModuleAccess,
   trainingDashboardRoutes
+);
+
+app.use(
+  "/api/super-admin/companies",
+  superAdminCompanyViewRoutes
 );
 
 // Health check

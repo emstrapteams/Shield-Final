@@ -1,4 +1,7 @@
 const ExcelJS = require("exceljs");
+// Ensure PDFKit's lazily loaded standard fonts are traced into the Vercel function.
+require("pdfkit/standard-fonts/Helvetica");
+require("pdfkit/standard-fonts/HelveticaBold");
 const PDFDocument = require("pdfkit");
 
 // Shared report-generation helpers. A "column" is { key, label }; "rows"

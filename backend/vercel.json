@@ -3,7 +3,7 @@
   "version": 2,
   "functions": {
     "api/index.js": {
-      "includeFiles": "node_modules/pdfkit/js/standard-fonts/**/*.cjs"
+      "includeFiles": "**/pdfkit/js/standard-fonts/*.cjs"
     }
   }
 }

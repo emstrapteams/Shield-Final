@@ -6,7 +6,11 @@ require("dotenv").config();
 const connectDB = require("./config/db");
 const { protect } = require("./middleware/auth");
 const authorize = require("./middleware/authorize");
-const companyIsolation = require("./middleware/companyIsolation");
+const {
+  companyIsolation,
+  readOnlyForSuperAdmin,
+  requireCompanyScope,
+} = require("./middleware/companyIsolation");
 
 const app = express();
 
@@ -119,8 +123,10 @@ app.use("/api/reports", reportRoutes);
 // Access control for safety modules
 const safetyModuleAccess = [
   protect,
-  authorize("company_admin"),
+  authorize("company_admin", "super_admin"),
   companyIsolation,
+  readOnlyForSuperAdmin,
+  requireCompanyScope,
 ];
 
 app.use("/api/dashboard", safetyModuleAccess, dashboardRoutes);

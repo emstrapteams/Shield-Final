@@ -22,6 +22,11 @@ const { protect } = require("../middleware/auth");
 
 const authorize = require("../middleware/authorize");
 
+const {
+  companyIsolation,
+  requireCompanyScope,
+} = require("../middleware/companyIsolation");
+
 // All emergency routes require authentication
 router.use(protect);
 
@@ -39,10 +44,12 @@ router.get(
   getMyEmergencies
 );
 
-// Company Admin views emergencies belonging to their company
+// Company Admin and Super Admin view emergencies belonging to the company
 router.get(
   "/",
-  authorize("company_admin"),
+  authorize("company_admin", "super_admin"),
+  companyIsolation,
+  requireCompanyScope,
   getCompanyEmergencies
 );
 
@@ -89,10 +96,11 @@ router.patch(
   cancelEmergency
 );
 
-// Employee or Company Admin views emergency details
+// Employee, Company Admin, or Super Admin views emergency details
 router.get(
   "/:id",
-  authorize("employee", "company_admin"),
+  authorize("employee", "company_admin", "super_admin"),
+  companyIsolation,
   getEmergencyById
 );
 

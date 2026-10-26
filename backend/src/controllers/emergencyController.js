@@ -198,10 +198,15 @@ const getEmergencyById = async (req, res) => {
       });
     }
 
-    const emergency = await Emergency.findOne({
-      _id: id,
-      company: req.user.company,
-    }).populate("reportedBy", "name email");
+    const targetCompanyId = req.companyId || req.user.company;
+    const query = { _id: id };
+    if (targetCompanyId) {
+      query.company = targetCompanyId;
+    }
+
+    const emergency = await Emergency.findOne(query)
+      .populate("reportedBy", "name email phone role employeeId")
+      .populate("responseHistory.performedBy", "name email role");
 
     if (!emergency) {
       return res.status(404).json({
@@ -458,8 +463,16 @@ const getCompanyEmergencies = async (req, res) => {
     }
 
     // Company isolation.
+    const companyScope = req.companyId || req.user.company;
+    if (!companyScope) {
+      return res.status(400).json({
+        success: false,
+        message: "A company ID is required to access company emergencies.",
+      });
+    }
+
     const filter = {
-      company: req.user.company,
+      company: companyScope,
     };
 
     if (status) {

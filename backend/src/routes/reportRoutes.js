@@ -2,7 +2,11 @@
 const express = require("express");
 const { protect } = require("../middleware/auth");
 const authorize = require("../middleware/authorize");
-const companyIsolation = require("../middleware/companyIsolation");
+const {
+  companyIsolation,
+  readOnlyForSuperAdmin,
+  requireCompanyScope,
+} = require("../middleware/companyIsolation");
 
 const {
   equipmentReport,
@@ -17,8 +21,10 @@ const {
 const router = express.Router();
 
 router.use(protect);
-router.use(authorize("company_admin"));
+router.use(authorize("company_admin", "super_admin"));
 router.use(companyIsolation);
+router.use(readOnlyForSuperAdmin);
+router.use(requireCompanyScope);
 
 router.get("/equipment", equipmentReport);
 router.get("/fire-extinguishers", fireExtinguisherReport);

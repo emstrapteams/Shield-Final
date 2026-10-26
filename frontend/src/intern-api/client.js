@@ -1,15 +1,23 @@
 
 
-const BASE_URL = (
+const rawBase = (
+  import.meta.env.VITE_API_URL ||
   import.meta.env.VITE_API_BASE_URL ||
   "https://shield-final-backend.vercel.app/api"
 ).replace(/\/+$/, "");
 
+const BASE_URL = rawBase.endsWith("/api") ? rawBase : `${rawBase}/api`;
 
 function getAuthHeaders() {
   const token = sessionStorage.getItem("shield_token");
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  const activeCompanyId = sessionStorage.getItem("shield_active_company_id");
+  if (activeCompanyId) {
+    headers["x-company-id"] = activeCompanyId;
+  }
+
+  return headers;
 }
 
 async function request(path, { method = "GET", body, params } = {}) {

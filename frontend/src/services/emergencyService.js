@@ -9,13 +9,18 @@ const emergencyAPI = axios.create({
   baseURL: API_URL,
 });
 
-// Attach the logged-in user's JWT to every request.
+// Attach the logged-in user's JWT and active company scope to every request.
 emergencyAPI.interceptors.request.use(
   (config) => {
     const token = getStoredToken();
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    const activeCompanyId = sessionStorage.getItem("shield_active_company_id");
+    if (activeCompanyId) {
+      config.headers["x-company-id"] = activeCompanyId;
     }
 
     return config;

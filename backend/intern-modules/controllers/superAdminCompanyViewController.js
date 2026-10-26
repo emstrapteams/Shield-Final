@@ -6,6 +6,13 @@ const Employee = require("../models/Employee");
 const Department = require("../models/Department");
 const Facility = require("../models/Facility");
 const Equipment = require("../models/Equipment");
+const Inspection = require("../models/Inspection");
+const CorrectiveAction = require("../models/CorrectiveAction");
+const EmergencyResource = require("../models/EmergencyResource");
+const Drill = require("../models/Drill");
+const TrainingProgram = require("../models/TrainingProgram");
+const TrainingSession = require("../models/TrainingSession");
+const Emergency = require("../../src/models/Emergency");
 
 const getCompanyOverview = async (req, res) => {
   try {
@@ -34,11 +41,29 @@ const getCompanyOverview = async (req, res) => {
       departmentCount,
       facilityCount,
       equipmentCount,
+      fireExtinguisherCount,
+      firstAidKitCount,
+      inspectionCount,
+      correctiveActionCount,
+      emergencyResourceCount,
+      drillCount,
+      trainingProgramCount,
+      trainingSessionCount,
+      emergencyCount,
     ] = await Promise.all([
       Employee.countDocuments(companyFilter),
       Department.countDocuments(companyFilter),
       Facility.countDocuments(companyFilter),
       Equipment.countDocuments(companyFilter),
+      Equipment.countDocuments({ ...companyFilter, type: "fire_extinguisher" }),
+      Equipment.countDocuments({ ...companyFilter, type: "first_aid_kit" }),
+      Inspection.countDocuments(companyFilter),
+      CorrectiveAction.countDocuments(companyFilter),
+      EmergencyResource.countDocuments(companyFilter),
+      Drill.countDocuments(companyFilter),
+      TrainingProgram.countDocuments(companyFilter),
+      TrainingSession.countDocuments(companyFilter),
+      Emergency.countDocuments(companyFilter),
     ]);
 
     return res.status(200).json({
@@ -50,6 +75,15 @@ const getCompanyOverview = async (req, res) => {
           departments: departmentCount,
           facilities: facilityCount,
           equipment: equipmentCount,
+          fireExtinguishers: fireExtinguisherCount,
+          firstAidKits: firstAidKitCount,
+          inspections: inspectionCount,
+          correctiveActions: correctiveActionCount,
+          emergencyResources: emergencyResourceCount,
+          drills: drillCount,
+          trainingPrograms: trainingProgramCount,
+          trainingSessions: trainingSessionCount,
+          emergencies: emergencyCount,
         },
       },
     });

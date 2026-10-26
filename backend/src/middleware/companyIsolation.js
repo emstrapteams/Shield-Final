@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
+const Company = require("../models/Company");
 
-const companyIsolation = (req, res, next) => {
+const companyIsolation = async (req, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({
@@ -9,8 +10,9 @@ const companyIsolation = (req, res, next) => {
       });
     }
 
-    // Safely get any requested company ID
+    // Safely get any requested company ID from headers, params, body, or query
     const requestedCompanyId =
+      req.headers["x-company-id"] ||
       req.params?.companyId ||
       req.body?.company ||
       req.body?.companyId ||
@@ -59,11 +61,20 @@ const companyIsolation = (req, res, next) => {
         return next();
       }
 
-      // Validate company ID
+      // Validate company ID format
       if (!mongoose.Types.ObjectId.isValid(requestedCompanyId)) {
         return res.status(400).json({
           success: false,
           message: "Invalid company ID.",
+        });
+      }
+
+      // Verify the company actually exists in the database
+      const companyExists = await Company.findById(requestedCompanyId).select("_id").lean();
+      if (!companyExists) {
+        return res.status(404).json({
+          success: false,
+          message: "Company not found.",
         });
       }
 
@@ -88,4 +99,32 @@ const companyIsolation = (req, res, next) => {
   }
 };
 
+// Enforces read-only access for Super Admins on company operational records
+const readOnlyForSuperAdmin = (req, res, next) => {
+  if (req.user && req.user.role === "super_admin") {
+    const isSafeMethod = ["GET", "HEAD", "OPTIONS"].includes(req.method);
+    if (!isSafeMethod) {
+      return res.status(403).json({
+        success: false,
+        message: "Super Admins have read-only access to company records and cannot modify them.",
+      });
+    }
+  }
+  next();
+};
+
+// Requires that a companyId has been scoped (essential for Super Admin viewing company data)
+const requireCompanyScope = (req, res, next) => {
+  if (req.user && req.user.role === "super_admin" && !req.companyId) {
+    return res.status(400).json({
+      success: false,
+      message: "A company ID is required to access company-scoped data.",
+    });
+  }
+  next();
+};
+
 module.exports = companyIsolation;
+module.exports.companyIsolation = companyIsolation;
+module.exports.readOnlyForSuperAdmin = readOnlyForSuperAdmin;
+module.exports.requireCompanyScope = requireCompanyScope;

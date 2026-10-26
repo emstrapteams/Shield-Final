@@ -10,6 +10,7 @@ import {
   createCompanyAdmin,
 } from "../services/companyService";
 import { logoutUser } from "../services/authService";
+import SuperAdminCompanyDashboardView from "../components/SuperAdminCompanyDashboardView";
 import "./SuperAdminDashboard.css";
 
 function SuperAdminDashboard({ user, onLogout }) {
@@ -67,88 +68,15 @@ const [companyDashboardLoading, setCompanyDashboardLoading] = useState(false);
   };
   
 
-const handleViewCompanyDashboard = async (company) => {
-  setSelectedCompany(company);
-  setActiveSection("company-dashboard");
-  setCompanyDashboardLoading(true);
-  setCompanyOverview(null);
-  setCompanyEmployees([]);
-  setError("");
-  setSuccess("");
-
-  try {
-    const token = sessionStorage.getItem("shield_token");
-
-    if (!token) {
-      throw new Error(
-        "Authentication token not found. Please log in again."
-      );
+  const handleViewCompanyDashboard = (company) => {
+    setSelectedCompany(company);
+    setActiveSection("company-dashboard");
+    if (company?._id) {
+      sessionStorage.setItem("shield_active_company_id", company._id);
     }
-
-    const apiBase = (
-      import.meta.env.VITE_API_URL || "https://shield-final-backend.vercel.app/api"
-    ).replace(/\/+$/, "");
-
-    if (!company?._id) {
-      throw new Error("Company ID is missing.");
-    }
-
-    const headers = {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    };
-
-    const endpoints = [
-      {
-        name: "Company overview",
-        url: `${apiBase}/super-admin/companies/${company._id}/overview`,
-      },
-      {
-        name: "Company employees",
-        url: `${apiBase}/super-admin/companies/${company._id}/employees`,
-      },
-    ];
-
-    const responses = await Promise.all(
-      endpoints.map(async (endpoint) => {
-        const response = await fetch(endpoint.url, { headers });
-
-        let result;
-        try {
-          result = await response.json();
-        } catch {
-          result = {};
-        }
-
-        if (!response.ok) {
-          throw new Error(
-            `${endpoint.name} failed (${response.status}) at ` +
-              `${endpoint.url}: ` +
-              (result.message || result.error || "Request failed")
-          );
-        }
-
-        if (result.success === false) {
-          throw new Error(
-            `${endpoint.name}: ${result.message || "Request failed"}`
-          );
-        }
-
-        return result;
-      })
-    );
-
-    setCompanyOverview(responses[0].data);
-    setCompanyEmployees(
-      Array.isArray(responses[1].data) ? responses[1].data : []
-    );
-  } catch (err) {
-    console.error("Super Admin company dashboard error:", err);
-    setError(err.message || "Unable to load the company dashboard.");
-  } finally {
-    setCompanyDashboardLoading(false);
-  }
-};
+    setError("");
+    setSuccess("");
+  };
 
 
 
@@ -488,162 +416,17 @@ const handleViewCompanyDashboard = async (company) => {
           
 {/* Selected Company's Read-Only Dashboard */}
 {activeSection === "company-dashboard" && selectedCompany && (
-  <section className="companies-panel">
-    <div className="panel-heading">
-      <div>
-        <h3>{selectedCompany.name} — Company Dashboard</h3>
-        <p>
-          Company Code: {selectedCompany.code} | Status:{" "}
-          {selectedCompany.status}
-        </p>
-        <p>Super Admin access — Read only</p>
-      </div>
-
-      <button
-        type="button"
-        className="secondary-button"
-        onClick={() => {
-          setActiveSection("companies");
-          setSelectedCompany(null);
-          setCompanyOverview(null);
-          setCompanyEmployees([]);
-          setError("");
-          setSuccess("");
-        }}
-      >
-        Back to Companies
-      </button>
-    </div>
-
-    {companyDashboardLoading ? (
-      <div className="empty-state">
-        Loading company dashboard...
-      </div>
-    ) : (
-      <>
-        {companyOverview && (
-          <>
-            <div className="stats-grid">
-              <div className="stat-card">
-                <span>Total Employees</span>
-                <strong>
-                  {companyOverview.summary?.employees ?? 0}
-                </strong>
-              </div>
-
-              <div className="stat-card">
-                <span>Departments</span>
-                <strong>
-                  {companyOverview.summary?.departments ?? 0}
-                </strong>
-              </div>
-
-              <div className="stat-card">
-                <span>Facilities</span>
-                <strong>
-                  {companyOverview.summary?.facilities ?? 0}
-                </strong>
-              </div>
-
-              <div className="stat-card">
-                <span>Safety Equipment</span>
-                <strong>
-                  {companyOverview.summary?.equipment ?? 0}
-                </strong>
-              </div>
-            </div>
-
-            <div className="panel-heading">
-              <div>
-                <h3>Company Information</h3>
-              </div>
-            </div>
-
-            <div className="table-wrapper">
-              <table className="companies-table">
-                <tbody>
-                  <tr>
-                    <th>Company Name</th>
-                    <td>{companyOverview.company?.name || "—"}</td>
-                  </tr>
-                  <tr>
-                    <th>Company Code</th>
-                    <td>{companyOverview.company?.code || "—"}</td>
-                  </tr>
-                  <tr>
-                    <th>Status</th>
-                    <td>{companyOverview.company?.status || "—"}</td>
-                  </tr>
-                  <tr>
-                    <th>Created</th>
-                    <td>
-                      {companyOverview.company?.createdAt
-                        ? new Date(
-                            companyOverview.company.createdAt
-                          ).toLocaleDateString()
-                        : "—"}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </>
-        )}
-
-        <div className="panel-heading">
-          <div>
-            <h3>Employees</h3>
-            <p>Employee records for this company.</p>
-          </div>
-          <span>{companyEmployees.length} employees</span>
-        </div>
-
-        {companyEmployees.length === 0 ? (
-          <div className="empty-state">
-            No employee records found.
-          </div>
-        ) : (
-          <div className="table-wrapper">
-            <table className="companies-table">
-              <thead>
-                <tr>
-                  <th>Employee ID</th>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Phone</th>
-                  <th>Department</th>
-                  <th>Facility</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {companyEmployees.map((employee) => (
-                  <tr key={employee._id}>
-                    <td>{employee.employeeId || "—"}</td>
-                    <td>{employee.name || "—"}</td>
-                    <td>{employee.email || "—"}</td>
-                    <td>{employee.phone || "—"}</td>
-                    <td>{employee.department?.name || "—"}</td>
-                    <td>{employee.facility?.name || "—"}</td>
-                    <td>
-                      <span
-                        className={`status-badge ${
-                          employee.status || "inactive"
-                        }`}
-                      >
-                        {employee.status || "Unknown"}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </>
-    )}
-  </section>
+  <SuperAdminCompanyDashboardView
+    company={selectedCompany}
+    user={user}
+    onBack={() => {
+      sessionStorage.removeItem("shield_active_company_id");
+      setActiveSection("companies");
+      setSelectedCompany(null);
+      setError("");
+      setSuccess("");
+    }}
+  />
 )}
 
 

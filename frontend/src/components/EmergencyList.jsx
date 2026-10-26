@@ -27,6 +27,7 @@ const typeLabels = {
   vehicle: "Vehicle Emergency",
   equipment: "Equipment Failure",
   security: "Security Threat",
+  emergency_alert: "Emergency Alert",
   other: "Other",
 };
 

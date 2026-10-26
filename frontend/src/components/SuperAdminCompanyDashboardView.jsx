@@ -730,6 +730,7 @@ export default function SuperAdminCompanyDashboardView({ company, onBack }) {
                 <option value="vehicle">Vehicle</option>
                 <option value="equipment">Equipment</option>
                 <option value="security">Security</option>
+                <option value="emergency_alert">Emergency Alert</option>
                 <option value="other">Other</option>
               </select>
               {(emergencySearch || emergencyStatus || emergencyType) && (

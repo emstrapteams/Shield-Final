@@ -238,7 +238,7 @@ export default function EmergencyForm() {
 
     try {
       const result = await createEmergency({
-        type: "other",
+        type: "emergency_alert",
         description: "Emergency alert sent by employee.",
         location,
       });

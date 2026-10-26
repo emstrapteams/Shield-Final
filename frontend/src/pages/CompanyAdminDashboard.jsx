@@ -70,6 +70,7 @@ const typeOptions = [
   "vehicle",
   "equipment",
   "security",
+  "emergency_alert",
   "other",
 ];
 

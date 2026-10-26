@@ -32,6 +32,7 @@ const emergencySchema = new mongoose.Schema(
         "vehicle",
         "equipment",
         "security",
+        "emergency_alert",
         "other",
       ],
       required: true,

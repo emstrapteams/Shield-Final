@@ -56,6 +56,7 @@ const createEmergency = async (req, res) => {
       "vehicle",
       "equipment",
       "security",
+      "emergency_alert",
       "other",
     ];
 
@@ -463,6 +464,7 @@ const getCompanyEmergencies = async (req, res) => {
       "vehicle",
       "equipment",
       "security",
+      "emergency_alert",
       "other",
     ];
 

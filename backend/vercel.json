@@ -1,4 +1,7 @@
 
 {
-  "version": 2
+  "version": 2,
+  "outputFileTracingIncludes": {
+    "/api/**": ["./node_modules/pdfkit/js/standard-fonts/**/*.cjs"]
+  }
 }

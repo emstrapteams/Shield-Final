@@ -339,14 +339,6 @@ export default function EmergencyForm() {
 
   return (
     <div className="emergency-one-tap-card">
-      <div className="emergency-one-tap-heading">
-        <span className="emergency-one-tap-icon" aria-hidden="true">!</span>
-        <div>
-          <h2>Emergency Alert</h2>
-          <p>Create an alert for your company response team with your location.</p>
-        </div>
-      </div>
-
       {requestError && <div className="emergency-message error" role="alert">{requestError}</div>}
 
       {stage === "idle" && (

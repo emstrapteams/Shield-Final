@@ -571,43 +571,15 @@
   box-shadow: 0 8px 28px rgba(15, 23, 42, 0.07);
 }
 
-.emergency-one-tap-heading {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.emergency-one-tap-heading h2,
-.emergency-one-tap-heading p,
 .emergency-one-tap-complete h3,
 .emergency-one-tap-complete p {
   margin: 0;
 }
 
-.emergency-one-tap-heading h2 {
-  color: #172554;
-  font-size: 24px;
-}
-
-.emergency-one-tap-heading p,
 .emergency-one-tap-complete p {
   margin-top: 6px;
   color: #64748b;
   line-height: 1.6;
-}
-
-.emergency-one-tap-icon {
-  display: grid;
-  flex: 0 0 48px;
-  width: 48px;
-  height: 48px;
-  place-items: center;
-  border-radius: 50%;
-  background: #fee2e2;
-  color: #b91c1c;
-  font-size: 28px;
-  font-weight: 800;
 }
 
 .emergency-one-tap-button,
@@ -744,9 +716,9 @@
 
 .emergency-start-panel {
   display: flex;
+  min-height: 208px;
   align-items: center;
   justify-content: center;
-  padding: 34px 0 10px;
 }
 
 .emergency-start-button {
@@ -790,7 +762,7 @@
   }
 
   .emergency-start-panel {
-    padding: 30px 0 4px;
+    min-height: 180px;
   }
 
   .emergency-start-button {

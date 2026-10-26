@@ -354,16 +354,11 @@ export default function EmergencyForm() {
           <button
             className="emergency-start-button"
             type="button"
-            aria-label="Start emergency alert"
+            aria-label="Emergency"
             onClick={beginEmergency}
           >
-            <span className="emergency-start-button-icon" aria-hidden="true">!</span>
-            <span>START</span>
+            Emergency
           </button>
-          <div className="emergency-start-copy">
-            <strong>Need immediate assistance?</strong>
-            <p>Start an alert and share your location with your company response team.</p>
-          </div>
         </div>
       )}
 

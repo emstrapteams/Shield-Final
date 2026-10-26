@@ -350,9 +350,21 @@ export default function EmergencyForm() {
       {requestError && <div className="emergency-message error" role="alert">{requestError}</div>}
 
       {stage === "idle" && (
-        <button className="emergency-one-tap-button" onClick={beginEmergency}>
-          Start Emergency
-        </button>
+        <div className="emergency-start-panel">
+          <button
+            className="emergency-start-button"
+            type="button"
+            aria-label="Start emergency alert"
+            onClick={beginEmergency}
+          >
+            <span className="emergency-start-button-icon" aria-hidden="true">!</span>
+            <span>START</span>
+          </button>
+          <div className="emergency-start-copy">
+            <strong>Need immediate assistance?</strong>
+            <p>Start an alert and share your location with your company response team.</p>
+          </div>
+        </div>
       )}
 
       {(stage === "capturing" || stage === "sending") && (
@@ -371,9 +383,6 @@ export default function EmergencyForm() {
           </div>
 
           <div className="emergency-one-tap-camera">
-            <p className="emergency-one-tap-camera-note">
-              Camera preview stays on this device. Only a photo you capture is attached to the alert; no live video is sent.
-            </p>
             {cameraLoading && <p className="emergency-one-tap-camera-message">Starting camera…</p>}
             {!cameraLoading && !cameraError && (
               <video ref={videoRef} autoPlay playsInline muted aria-label="Live camera preview" />

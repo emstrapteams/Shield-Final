@@ -690,16 +690,6 @@
   object-fit: cover;
 }
 
-.emergency-one-tap-camera-note {
-  width: 100%;
-  margin: 0;
-  padding: 10px 14px;
-  color: #e2e8f0;
-  font-size: 12px;
-  line-height: 1.5;
-  text-align: center;
-}
-
 .emergency-one-tap-camera-message {
   margin: 0;
   padding: 24px;
@@ -752,10 +742,106 @@
   color: #166534;
 }
 
+.emergency-start-panel {
+  display: flex;
+  min-height: 180px;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  padding: 28px;
+  border: 1px solid #fee2e2;
+  border-radius: 14px;
+  background:
+    radial-gradient(ellipse at 14% 50%, rgba(254, 226, 226, 0.78), transparent 42%),
+    linear-gradient(135deg, #fffafa, #fff);
+}
+
+.emergency-start-button {
+  position: relative;
+  display: flex;
+  flex: 0 0 128px;
+  width: 128px;
+  height: 128px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 8px solid #fecaca;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #ef4444, #b91c1c);
+  box-shadow: 0 8px 18px rgba(185, 28, 28, 0.24), inset 0 2px 4px rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  cursor: pointer;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+}
+
+.emergency-start-button::before {
+  position: absolute;
+  inset: -13px;
+  border: 1px solid rgba(220, 38, 38, 0.22);
+  border-radius: 50%;
+  content: "";
+  pointer-events: none;
+}
+
+.emergency-start-button:hover {
+  transform: translateY(-2px) scale(1.025);
+  background: linear-gradient(145deg, #dc2626, #991b1b);
+  box-shadow: 0 12px 24px rgba(185, 28, 28, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.2);
+}
+
+.emergency-start-button:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.emergency-start-button:focus-visible {
+  outline: 3px solid #1d4ed8;
+  outline-offset: 6px;
+}
+
+.emergency-start-button-icon {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.emergency-start-copy {
+  max-width: 300px;
+}
+
+.emergency-start-copy strong {
+  color: #172554;
+  font-size: 17px;
+}
+
+.emergency-start-copy p {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
 @media (max-width: 640px) {
   .emergency-one-tap-card {
     margin: 12px auto;
     padding: 18px;
+  }
+
+  .emergency-start-panel {
+    min-height: 0;
+    flex-direction: column;
+    gap: 20px;
+    padding: 26px 18px;
+    text-align: center;
+  }
+
+  .emergency-start-button {
+    flex-basis: 116px;
+    width: 116px;
+    height: 116px;
   }
 
   .emergency-one-tap-actions {

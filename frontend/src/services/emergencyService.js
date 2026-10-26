@@ -1,12 +1,10 @@
 
 import axios from "axios";
+import { API_BASE_URL } from "./apiConfig";
 import { getStoredToken } from "./authService";
 
-const API_URL =
-  import.meta.env.VITE_API_URL || "https://shield-final-backend.vercel.app/api";
-
 const emergencyAPI = axios.create({
-  baseURL: API_URL,
+  baseURL: API_BASE_URL,
 });
 
 // Attach the logged-in user's JWT and active company scope to every request.

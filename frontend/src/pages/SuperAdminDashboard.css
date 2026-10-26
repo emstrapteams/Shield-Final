@@ -471,6 +471,35 @@
   align-items: center;
 }
 
+.company-row-actions {
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
+.view-dashboard-button {
+  min-height: 36px;
+  padding: 8px 12px;
+  border-color: #cbd5e1;
+  color: #1e3a8a;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.view-dashboard-button:hover:not(:disabled) {
+  border-color: #1e3a8a;
+  background: #eff6ff;
+  color: #1e3a8a;
+}
+
+.view-dashboard-button:focus-visible {
+  outline: 3px solid rgba(59, 130, 246, 0.45);
+  outline-offset: 2px;
+}
+
+.view-dashboard-button:active:not(:disabled) {
+  background: #dbeafe;
+}
+
 .edit-action,
 .status-action {
   background: none;

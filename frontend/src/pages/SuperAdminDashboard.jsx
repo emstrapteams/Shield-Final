@@ -16,6 +16,7 @@ import "./SuperAdminDashboard.css";
 function SuperAdminDashboard({ user, onLogout }) {
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [companiesError, setCompaniesError] = useState("");
 
   const [admins, setAdmins] = useState([]);
   const [adminsLoading, setAdminsLoading] = useState(false);
@@ -26,9 +27,6 @@ function SuperAdminDashboard({ user, onLogout }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [selectedCompany, setSelectedCompany] = useState(null);
-  const [companyOverview, setCompanyOverview] = useState(null);
-const [companyEmployees, setCompanyEmployees] = useState([]);
-const [companyDashboardLoading, setCompanyDashboardLoading] = useState(false);
 
   // Company form state
   const [showForm, setShowForm] = useState(false);
@@ -46,6 +44,7 @@ const [companyDashboardLoading, setCompanyDashboardLoading] = useState(false);
   const fetchCompanies = async () => {
     setLoading(true);
     setError("");
+    setCompaniesError("");
 
     try {
       const response = await getCompanies();
@@ -57,11 +56,17 @@ const [companyDashboardLoading, setCompanyDashboardLoading] = useState(false);
         response?.data?.data?.companies ??
         [];
 
-      setCompanies(Array.isArray(list) ? list : []);
+      if (!Array.isArray(list)) {
+        throw new Error("The server returned an unexpected companies response.");
+      }
+      setCompanies(list);
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Failed to load companies."
-      );
+      const message =
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to load companies.";
+      setCompaniesError(message);
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -106,13 +111,24 @@ const [companyDashboardLoading, setCompanyDashboardLoading] = useState(false);
   };
 
   useEffect(() => {
-    fetchCompanies();
+    let active = true;
+    Promise.resolve().then(() => {
+      if (active) fetchCompanies();
+    });
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
-    if (activeSection === "administrators") {
-      fetchAdmins();
-    }
+    if (activeSection !== "administrators") return undefined;
+    let active = true;
+    Promise.resolve().then(() => {
+      if (active) fetchAdmins();
+    });
+    return () => {
+      active = false;
+    };
   }, [activeSection]);
 
   // Company form functions
@@ -417,8 +433,8 @@ const [companyDashboardLoading, setCompanyDashboardLoading] = useState(false);
 {/* Selected Company's Read-Only Dashboard */}
 {activeSection === "company-dashboard" && selectedCompany && (
   <SuperAdminCompanyDashboardView
+    key={selectedCompany._id}
     company={selectedCompany}
-    user={user}
     onBack={() => {
       sessionStorage.removeItem("shield_active_company_id");
       setActiveSection("companies");
@@ -448,21 +464,21 @@ const [companyDashboardLoading, setCompanyDashboardLoading] = useState(false);
                 <div className="stat-card">
                   <div className="stat-icon total">▤</div>
                   <span>Total Companies</span>
-                  <strong>{companies.length}</strong>
+                  <strong>{loading ? "…" : companiesError ? "—" : companies.length}</strong>
                   <small>Registered organizations</small>
                 </div>
 
                 <div className="stat-card">
                   <div className="stat-icon active-icon">✓</div>
                   <span>Active Companies</span>
-                  <strong>{activeCount}</strong>
+                  <strong>{loading || companiesError ? "—" : activeCount}</strong>
                   <small>Currently active</small>
                 </div>
 
                 <div className="stat-card">
                   <div className="stat-icon suspended-icon">Ⅱ</div>
                   <span>Suspended Companies</span>
-                  <strong>{suspendedCount}</strong>
+                  <strong>{loading || companiesError ? "—" : suspendedCount}</strong>
                   <small>Access suspended</small>
                 </div>
               </div>
@@ -509,6 +525,18 @@ const [companyDashboardLoading, setCompanyDashboardLoading] = useState(false);
                 {loading ? (
                   <div className="empty-state">
                     Loading companies...
+                  </div>
+                ) : companiesError ? (
+                  <div className="empty-state" role="alert">
+                    <h4>Companies could not be loaded</h4>
+                    <p>Retry to check the current company records.</p>
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      onClick={fetchCompanies}
+                    >
+                      Try again
+                    </button>
                   </div>
                 ) : companies.length === 0 ? (
                   <div className="empty-state">
@@ -572,16 +600,17 @@ const [companyDashboardLoading, setCompanyDashboardLoading] = useState(false);
                                   ).toLocaleDateString()
                                 : "—"}
                             </td>
-   <button
-  type="button"
-  onClick={() => handleViewCompanyDashboard(company)}
->
-  View Dashboard
-</button>
-
                             <td>
-                              <div className="table-actions">
+                              <div className="table-actions company-row-actions">
                                 <button
+                                  type="button"
+                                  className="secondary-button view-dashboard-button"
+                                  onClick={() => handleViewCompanyDashboard(company)}
+                                >
+                                  View Dashboard
+                                </button>
+                                <button
+                                  type="button"
                                   className="edit-action"
                                   onClick={() =>
                                     openEditForm(company)
@@ -592,6 +621,7 @@ const [companyDashboardLoading, setCompanyDashboardLoading] = useState(false);
 
                                 {company.status !== "deactivated" && (
                                   <button
+                                    type="button"
                                     className="status-action"
                                     onClick={() =>
                                       handleStatusChange(company)

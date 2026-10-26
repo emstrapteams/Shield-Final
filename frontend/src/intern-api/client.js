@@ -1,12 +1,6 @@
 
 
-const rawBase = (
-  import.meta.env.VITE_API_URL ||
-  import.meta.env.VITE_API_BASE_URL ||
-  "https://shield-final-backend.vercel.app/api"
-).replace(/\/+$/, "");
-
-const BASE_URL = rawBase.endsWith("/api") ? rawBase : `${rawBase}/api`;
+import { API_BASE_URL } from "../services/apiConfig";
 
 function getAuthHeaders() {
   const token = sessionStorage.getItem("shield_token");
@@ -22,7 +16,7 @@ function getAuthHeaders() {
 
 async function request(path, { method = "GET", body, params } = {}) {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  let url = `${BASE_URL}${normalizedPath}`;
+  let url = `${API_BASE_URL}${normalizedPath}`;
 
   if (params) {
     const qs = new URLSearchParams(
@@ -84,7 +78,7 @@ export async function downloadReport(
   fallbackFilename = "report"
 ) {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  let url = `${BASE_URL}${normalizedPath}`;
+  let url = `${API_BASE_URL}${normalizedPath}`;
 
   const qs = new URLSearchParams(
     Object.entries(params || {}).filter(

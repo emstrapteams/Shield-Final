@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { api, downloadReport } from "../intern-api/client";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { api } from "../intern-api/client";
 import Dashboard from "../intern-pages/Dashboard";
 import Reports from "../intern-pages/Reports";
 import "./SuperAdminCompanyDashboardView.css";
@@ -32,8 +32,15 @@ const formatDate = (date) => {
   return Number.isNaN(parsed.getTime()) ? "—" : parsed.toLocaleString();
 };
 
-export default function SuperAdminCompanyDashboardView({ company, onBack, user }) {
+export default function SuperAdminCompanyDashboardView({ company, onBack }) {
+  const companyId = company?._id;
   const [activeTab, setActiveTab] = useState("overview");
+  const [safetyDashboardRefreshKey, setSafetyDashboardRefreshKey] = useState(0);
+  const [reportsRefreshKey, setReportsRefreshKey] = useState(0);
+  const overviewRequestId = useRef(0);
+  const emergenciesRequestId = useRef(0);
+  const itemsRequestId = useRef(0);
+  const optionsRequestId = useRef(0);
 
   // Overview stats & company info
   const [overviewData, setOverviewData] = useState(null);
@@ -46,6 +53,7 @@ export default function SuperAdminCompanyDashboardView({ company, onBack, user }
   const [emergencyStatus, setEmergencyStatus] = useState("");
   const [emergencyType, setEmergencyType] = useState("");
   const [emergenciesLoading, setEmergenciesLoading] = useState(false);
+  const [emergenciesError, setEmergenciesError] = useState("");
   const [selectedEmergency, setSelectedEmergency] = useState(null);
 
   // Generic collection state for list modules
@@ -67,61 +75,116 @@ export default function SuperAdminCompanyDashboardView({ company, onBack, user }
   // Helper options (departments, facilities, etc.)
   const [departmentOptions, setDepartmentOptions] = useState([]);
   const [facilityOptions, setFacilityOptions] = useState([]);
+  const [optionsError, setOptionsError] = useState("");
 
   // Ensure active company ID is placed in sessionStorage for client.js / emergencyService
   useEffect(() => {
-    if (company?._id) {
-      sessionStorage.setItem("shield_active_company_id", company._id);
+    if (companyId) {
+      sessionStorage.setItem("shield_active_company_id", companyId);
     }
+
     return () => {
       sessionStorage.removeItem("shield_active_company_id");
+      overviewRequestId.current += 1;
+      emergenciesRequestId.current += 1;
+      itemsRequestId.current += 1;
+      optionsRequestId.current += 1;
     };
-  }, [company?._id]);
+  }, [companyId]);
 
   // Load Overview Data
   const loadOverview = useCallback(async () => {
-    if (!company?._id) return;
+    if (!companyId) return;
+    const requestId = ++overviewRequestId.current;
     setOverviewLoading(true);
     setOverviewError("");
     try {
-      const res = await api.get(`/super-admin/companies/${company._id}/overview`);
-      setOverviewData(res.data);
+      const res = await api.get(`/super-admin/companies/${companyId}/overview`);
+      if (!res.data?.company || !res.data?.summary) {
+        throw new Error("The server returned an unexpected company overview.");
+      }
+      if (requestId === overviewRequestId.current) {
+        setOverviewData(res.data);
+      }
     } catch (err) {
-      setOverviewError(err.message || "Failed to load company overview.");
+      if (requestId === overviewRequestId.current) {
+        setOverviewData(null);
+        setOverviewError(err.message || "Failed to load company overview.");
+      }
     } finally {
-      setOverviewLoading(false);
+      if (requestId === overviewRequestId.current) {
+        setOverviewLoading(false);
+      }
     }
-  }, [company?._id]);
+  }, [companyId]);
 
   // Load Emergencies
   const loadEmergencies = useCallback(async () => {
-    if (!company?._id) return;
+    if (!companyId) return;
+    const requestId = ++emergenciesRequestId.current;
     setEmergenciesLoading(true);
+    setEmergenciesError("");
     try {
-      const res = await api.get(`/super-admin/companies/${company._id}/emergencies`);
-      const list = res.data?.emergencies || res.emergencies || res.data || [];
-      setEmergencies(Array.isArray(list) ? list : []);
+      const res = await api.get(`/super-admin/companies/${companyId}/emergencies`);
+      const list = res.data?.emergencies;
+      if (!Array.isArray(list)) {
+        throw new Error("The server returned an unexpected emergencies response.");
+      }
+      if (requestId === emergenciesRequestId.current) {
+        setEmergencies(list);
+      }
     } catch (err) {
-      console.error("Failed to load emergencies:", err);
+      if (requestId === emergenciesRequestId.current) {
+        setEmergencies([]);
+        setEmergenciesError(err.message || "Failed to load emergencies.");
+      }
     } finally {
-      setEmergenciesLoading(false);
+      if (requestId === emergenciesRequestId.current) {
+        setEmergenciesLoading(false);
+      }
     }
-  }, [company?._id]);
+  }, [companyId]);
 
-  // Load Department & Facility options for filters
+  const loadFilterOptions = useCallback(async () => {
+    if (!companyId) return;
+    const requestId = ++optionsRequestId.current;
+    try {
+      const [departments, facilities] = await Promise.all([
+        api.get("/departments", { limit: 100 }),
+        api.get("/facilities", { limit: 100 }),
+      ]);
+      if (!Array.isArray(departments.data) || !Array.isArray(facilities.data)) {
+        throw new Error("The server returned unexpected department or facility data.");
+      }
+      if (requestId === optionsRequestId.current) {
+        setOptionsError("");
+        setDepartmentOptions(departments.data);
+        setFacilityOptions(facilities.data);
+      }
+    } catch (err) {
+      if (requestId === optionsRequestId.current) {
+        setDepartmentOptions([]);
+        setFacilityOptions([]);
+        setOptionsError(err.message || "Failed to load department and facility options.");
+      }
+    }
+  }, [companyId]);
+
   useEffect(() => {
-    if (!company?._id) return;
-    api.get("/departments", { limit: 100 })
-      .then((res) => setDepartmentOptions(Array.isArray(res.data) ? res.data : []))
-      .catch(() => {});
-    api.get("/facilities", { limit: 100 })
-      .then((res) => setFacilityOptions(Array.isArray(res.data) ? res.data : []))
-      .catch(() => {});
-  }, [company?._id]);
+    let active = true;
+    Promise.resolve().then(() => {
+      if (active) loadFilterOptions();
+    });
+    return () => {
+      active = false;
+      optionsRequestId.current += 1;
+    };
+  }, [loadFilterOptions]);
 
   // Load Data for specific activeTab
   const loadTabContent = useCallback(async (page = 1) => {
-    if (!company?._id) return;
+    if (!companyId) return;
+    const requestId = ++itemsRequestId.current;
     if (activeTab === "overview") {
       loadOverview();
       loadEmergencies();
@@ -137,6 +200,8 @@ export default function SuperAdminCompanyDashboardView({ company, onBack, user }
 
     setLoadingItems(true);
     setItemsError("");
+    setItems([]);
+    setMeta({ page, totalPages: 1, total: 0 });
 
     try {
       let endpoint = "";
@@ -219,17 +284,31 @@ export default function SuperAdminCompanyDashboardView({ company, onBack, user }
 
       if (endpoint) {
         const res = await api.get(endpoint, params);
-        setItems(Array.isArray(res.data) ? res.data : []);
-        if (res.meta) setMeta(res.meta);
+        if (!Array.isArray(res.data)) {
+          throw new Error(`The server returned an unexpected ${activeTab} response.`);
+        }
+        if (requestId === itemsRequestId.current) {
+          setItems(res.data);
+          setMeta(res.meta || {
+            page,
+            totalPages: 1,
+            total: res.data.length,
+          });
+        }
       }
     } catch (err) {
-      setItemsError(err.message || `Failed to load ${activeTab} data.`);
+      if (requestId === itemsRequestId.current) {
+        setItems([]);
+        setItemsError(err.message || `Failed to load ${activeTab} data.`);
+      }
     } finally {
-      setLoadingItems(false);
+      if (requestId === itemsRequestId.current) {
+        setLoadingItems(false);
+      }
     }
   }, [
     activeTab,
-    company?._id,
+    companyId,
     search,
     filter1,
     filter2,
@@ -240,17 +319,29 @@ export default function SuperAdminCompanyDashboardView({ company, onBack, user }
 
   // Reload when tab or search/filters change
   useEffect(() => {
-    loadTabContent(1);
+    let active = true;
+    Promise.resolve().then(() => {
+      if (active) loadTabContent(1);
+    });
+    return () => {
+      active = false;
+      itemsRequestId.current += 1;
+    };
   }, [loadTabContent]);
 
   // Reset filters when switching tabs
   const handleTabChange = (tabId) => {
+    itemsRequestId.current += 1;
     setActiveTab(tabId);
     setSearch("");
     setFilter1("");
     setFilter2("");
     setFilterStatus("");
     setDetailModalItem(null);
+    setItems([]);
+    setLoadingItems(false);
+    setItemsError("");
+    setMeta({ page: 1, totalPages: 1, total: 0 });
   };
 
   // Filtered emergencies
@@ -296,14 +387,25 @@ export default function SuperAdminCompanyDashboardView({ company, onBack, user }
           <div className="sac-header-actions">
             <button
               className="sac-btn secondary"
+              type="button"
               onClick={() => {
-                loadOverview();
-                loadTabContent(meta.page);
+                if (activeTab === "overview") {
+                  loadOverview();
+                  loadEmergencies();
+                } else if (activeTab === "safetyDashboard") {
+                  setSafetyDashboardRefreshKey((key) => key + 1);
+                } else if (activeTab === "emergencies") {
+                  loadEmergencies();
+                } else if (activeTab === "reports") {
+                  setReportsRefreshKey((key) => key + 1);
+                } else {
+                  loadTabContent(meta.page);
+                }
               }}
             >
               ↻ Refresh
             </button>
-            <button className="sac-btn primary" onClick={onBack}>
+            <button className="sac-btn primary" type="button" onClick={onBack}>
               ← Back to Companies
             </button>
           </div>
@@ -316,6 +418,7 @@ export default function SuperAdminCompanyDashboardView({ company, onBack, user }
           <button
             key={tab.id}
             className={`sac-tab-btn ${activeTab === tab.id ? "active" : ""}`}
+            type="button"
             onClick={() => handleTabChange(tab.id)}
           >
             <span className="sac-tab-icon">{tab.icon}</span>
@@ -325,98 +428,130 @@ export default function SuperAdminCompanyDashboardView({ company, onBack, user }
       </nav>
 
       {/* Main Tab Content */}
-      <div className="sac-content-area">
+      <div className={`sac-content-area${itemsError ? " has-items-error" : ""}`}>
+        {optionsError && (
+          <div className="sac-alert error" role="alert">
+            {optionsError}
+            <button className="sac-btn secondary" type="button" onClick={loadFilterOptions}>
+              Try again
+            </button>
+          </div>
+        )}
+        {itemsError && (
+          <div className="sac-alert error" role="alert">
+            {itemsError}
+            <button className="sac-btn secondary" type="button" onClick={() => loadTabContent(1)}>
+              Try again
+            </button>
+          </div>
+        )}
         {/* ================= OVERVIEW TAB ================= */}
         {activeTab === "overview" && (
           <>
-            {overviewError && <div className="sac-alert error">{overviewError}</div>}
-
+            {overviewLoading ? (
+              <div className="sac-loading-state" role="status">Loading company overview…</div>
+            ) : overviewError ? (
+              <div className="sac-alert error" role="alert">
+                {overviewError}
+                <button className="sac-btn secondary" type="button" onClick={loadOverview}>
+                  Try again
+                </button>
+              </div>
+            ) : overviewData ? (
             <div className="sac-stats-grid">
               <div className="sac-stat-card">
                 <span className="sac-stat-label">Total Employees</span>
                 <strong className="sac-stat-value">
-                  {overviewLoading ? "…" : overviewData?.summary?.employees ?? 0}
+                  {overviewData.summary.employees ?? "—"}
                 </strong>
                 <span className="sac-stat-sub">Registered workforce</span>
               </div>
               <div className="sac-stat-card">
                 <span className="sac-stat-label">Departments</span>
                 <strong className="sac-stat-value">
-                  {overviewLoading ? "…" : overviewData?.summary?.departments ?? 0}
+                  {overviewData.summary.departments ?? "—"}
                 </strong>
                 <span className="sac-stat-sub">Configured units</span>
               </div>
               <div className="sac-stat-card">
                 <span className="sac-stat-label">Facilities</span>
                 <strong className="sac-stat-value">
-                  {overviewLoading ? "…" : overviewData?.summary?.facilities ?? 0}
+                  {overviewData.summary.facilities ?? "—"}
                 </strong>
                 <span className="sac-stat-sub">Active locations</span>
               </div>
               <div className="sac-stat-card">
                 <span className="sac-stat-label">Safety Equipment</span>
                 <strong className="sac-stat-value">
-                  {overviewLoading ? "…" : overviewData?.summary?.equipment ?? 0}
+                  {overviewData.summary.equipment ?? "—"}
                 </strong>
                 <span className="sac-stat-sub">Tracked safety assets</span>
               </div>
               <div className="sac-stat-card">
                 <span className="sac-stat-label">Fire Extinguishers</span>
                 <strong className="sac-stat-value">
-                  {overviewLoading ? "…" : overviewData?.summary?.fireExtinguishers ?? 0}
+                  {overviewData.summary.fireExtinguishers ?? "—"}
                 </strong>
                 <span className="sac-stat-sub">Maintained units</span>
               </div>
               <div className="sac-stat-card">
                 <span className="sac-stat-label">First-Aid Kits</span>
                 <strong className="sac-stat-value">
-                  {overviewLoading ? "…" : overviewData?.summary?.firstAidKits ?? 0}
+                  {overviewData.summary.firstAidKits ?? "—"}
                 </strong>
                 <span className="sac-stat-sub">Monitored stations</span>
               </div>
               <div className="sac-stat-card">
                 <span className="sac-stat-label">Inspections</span>
                 <strong className="sac-stat-value">
-                  {overviewLoading ? "…" : overviewData?.summary?.inspections ?? 0}
+                  {overviewData.summary.inspections ?? "—"}
                 </strong>
                 <span className="sac-stat-sub">Safety audits conducted</span>
               </div>
               <div className="sac-stat-card">
                 <span className="sac-stat-label">Corrective Actions</span>
                 <strong className="sac-stat-value">
-                  {overviewLoading ? "…" : overviewData?.summary?.correctiveActions ?? 0}
+                  {overviewData.summary.correctiveActions ?? "—"}
                 </strong>
                 <span className="sac-stat-sub">Remediation records</span>
               </div>
               <div className="sac-stat-card">
                 <span className="sac-stat-label">Emergency Resources</span>
                 <strong className="sac-stat-value">
-                  {overviewLoading ? "…" : overviewData?.summary?.emergencyResources ?? 0}
+                  {overviewData.summary.emergencyResources ?? "—"}
                 </strong>
                 <span className="sac-stat-sub">Ambulance, hospital, fire</span>
               </div>
               <div className="sac-stat-card">
                 <span className="sac-stat-label">Emergency Drills</span>
                 <strong className="sac-stat-value">
-                  {overviewLoading ? "…" : overviewData?.summary?.drills ?? 0}
+                  {overviewData.summary.drills ?? "—"}
                 </strong>
                 <span className="sac-stat-sub">Scheduled & conducted</span>
               </div>
               <div className="sac-stat-card">
                 <span className="sac-stat-label">Training Programs</span>
                 <strong className="sac-stat-value">
-                  {overviewLoading ? "…" : overviewData?.summary?.trainingPrograms ?? 0}
+                  {overviewData.summary.trainingPrograms ?? "—"}
                 </strong>
                 <span className="sac-stat-sub">Curriculums active</span>
               </div>
               <div className="sac-stat-card">
                 <span className="sac-stat-label">Emergencies</span>
                 <strong className="sac-stat-value">
-                  {overviewLoading ? "…" : overviewData?.summary?.emergencies ?? emergencies.length}
+                  {overviewData.summary.emergencies ?? "—"}
                 </strong>
                 <span className="sac-stat-sub">Incident reports</span>
               </div>
             </div>
+            ) : (
+              <div className="sac-empty-state">
+                <h4>No overview data available</h4>
+                <button className="sac-btn secondary" type="button" onClick={loadOverview}>
+                  Try again
+                </button>
+              </div>
+            )}
 
             {/* Company Details Panel */}
             <div className="sac-panel">
@@ -467,14 +602,22 @@ export default function SuperAdminCompanyDashboardView({ company, onBack, user }
                 </div>
                 <button
                   className="sac-action-btn"
-                  onClick={() => setActiveTab("emergencies")}
+                  type="button"
+                  onClick={() => handleTabChange("emergencies")}
                 >
-                  View All ({emergencies.length}) →
+                  View All{emergenciesLoading || emergenciesError ? "" : ` (${emergencies.length})`} →
                 </button>
               </div>
 
               {emergenciesLoading ? (
                 <div className="sac-loading-state">Loading incidents…</div>
+              ) : emergenciesError ? (
+                <div className="sac-empty-state" role="alert">
+                  <p>{emergenciesError}</p>
+                  <button className="sac-btn secondary" type="button" onClick={loadEmergencies}>
+                    Try again
+                  </button>
+                </div>
               ) : emergencies.length === 0 ? (
                 <div className="sac-empty-state">
                   <h4>No emergencies recorded</h4>
@@ -528,7 +671,10 @@ export default function SuperAdminCompanyDashboardView({ company, onBack, user }
         {/* ================= SAFETY DASHBOARD TAB ================= */}
         {activeTab === "safetyDashboard" && (
           <div className="sac-panel">
-            <Dashboard />
+            <Dashboard
+              key={companyId}
+              refreshKey={safetyDashboardRefreshKey}
+            />
           </div>
         )}
 
@@ -541,7 +687,11 @@ export default function SuperAdminCompanyDashboardView({ company, onBack, user }
                 <p>Real-time emergency incidents reported by employees for {company?.name}.</p>
               </div>
               <span className="sac-stat-sub">
-                Showing {filteredEmergencies.length} of {emergencies.length} records
+                {emergenciesLoading
+                  ? "Loading emergency records…"
+                  : emergenciesError
+                  ? "Emergency records unavailable"
+                  : `Showing ${filteredEmergencies.length} of ${emergencies.length} records`}
               </span>
             </div>
 
@@ -598,6 +748,13 @@ export default function SuperAdminCompanyDashboardView({ company, onBack, user }
 
             {emergenciesLoading ? (
               <div className="sac-loading-state">Loading emergency reports…</div>
+            ) : emergenciesError ? (
+              <div className="sac-empty-state" role="alert">
+                <p>{emergenciesError}</p>
+                <button className="sac-btn secondary" type="button" onClick={loadEmergencies}>
+                  Try again
+                </button>
+              </div>
             ) : filteredEmergencies.length === 0 ? (
               <div className="sac-empty-state">
                 <h4>No emergencies found</h4>
@@ -694,8 +851,6 @@ export default function SuperAdminCompanyDashboardView({ company, onBack, user }
                 <option value="inactive">Inactive</option>
               </select>
             </div>
-
-            {itemsError && <div className="sac-alert error">{itemsError}</div>}
 
             {loadingItems ? (
               <div className="sac-loading-state">Loading employees…</div>
@@ -1623,7 +1778,7 @@ export default function SuperAdminCompanyDashboardView({ company, onBack, user }
         {/* ================= REPORTS TAB ================= */}
         {activeTab === "reports" && (
           <div className="sac-panel">
-            <Reports />
+            <Reports key={reportsRefreshKey} />
           </div>
         )}
       </div>

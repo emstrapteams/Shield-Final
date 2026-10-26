@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { api } from "../intern-api/client";
 
 const dashboardStyles = `
@@ -171,33 +171,83 @@ function Section({ title, note, children }) {
   );
 }
 
-export default function Dashboard() {
+export default function Dashboard({ refreshKey = 0 }) {
   const [data, setData] = useState(null);
   const [facilities, setFacilities] = useState([]);
   const [facility, setFacility] = useState("");
+  const [facilitiesLoading, setFacilitiesLoading] = useState(true);
+  const [facilitiesError, setFacilitiesError] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const requestId = useRef(0);
 
   const load = useCallback(async () => {
+    const currentRequestId = ++requestId.current;
     setLoading(true);
     setError("");
     try {
       const { data: overview } = await api.get("/dashboard/overview", { facility });
-      setData(overview);
+      if (
+        !overview?.employees ||
+        !overview?.facilities ||
+        !overview?.equipment ||
+        !overview?.inspections ||
+        !overview?.correctiveActions ||
+        !overview?.training ||
+        !overview?.drills
+      ) {
+        throw new Error("The server returned an unexpected safety dashboard response.");
+      }
+      if (currentRequestId === requestId.current) {
+        setData(overview);
+      }
     } catch (err) {
-      setError(err?.message || "Failed to load dashboard.");
+      if (currentRequestId === requestId.current) {
+        setData(null);
+        setError(err?.message || "Failed to load dashboard.");
+      }
     } finally {
-      setLoading(false);
+      if (currentRequestId === requestId.current) {
+        setLoading(false);
+      }
     }
   }, [facility]);
 
-  useEffect(() => {
-    api.get("/facilities", { limit: 100 })
-      .then(({ data: facilityData }) => setFacilities(Array.isArray(facilityData) ? facilityData : []))
-      .catch(() => {});
+  const loadFacilities = useCallback(async () => {
+    try {
+      const { data: facilityData } = await api.get("/facilities", { limit: 100 });
+      if (!Array.isArray(facilityData)) {
+        throw new Error("The server returned an unexpected facilities response.");
+      }
+      setFacilitiesError("");
+      setFacilities(facilityData);
+    } catch (err) {
+      setFacilities([]);
+      setFacilitiesError(err?.message || "Failed to load facilities.");
+    } finally {
+      setFacilitiesLoading(false);
+    }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    let active = true;
+    Promise.resolve().then(() => {
+      if (active) loadFacilities();
+    });
+    return () => {
+      active = false;
+    };
+  }, [loadFacilities]);
+  useEffect(() => {
+    let active = true;
+    Promise.resolve().then(() => {
+      if (active) load();
+    });
+    return () => {
+      active = false;
+      requestId.current += 1;
+    };
+  }, [load, refreshKey]);
 
   const trainingPercentage = Math.min(
     100,
@@ -221,15 +271,32 @@ export default function Dashboard() {
           <select
             id="sd-facility-filter"
             value={facility}
+            disabled={facilitiesLoading}
             onChange={(event) => setFacility(event.target.value)}
           >
-            <option value="">All facilities</option>
+            <option value="">{facilitiesLoading ? "Loading facilities…" : "All facilities"}</option>
             {facilities.map((item) => (
               <option key={item._id} value={item._id}>{item.name}</option>
             ))}
           </select>
         </div>
       </header>
+
+      {facilitiesError && (
+        <div className="sd-alert" role="alert">
+          <strong>Facilities could not be loaded.</strong> {facilitiesError}
+          <button
+            className="sd-retry"
+            type="button"
+            onClick={() => {
+              setFacilitiesLoading(true);
+              loadFacilities();
+            }}
+          >
+            Try again
+          </button>
+        </div>
+      )}
 
       {error && (
         <div className="sd-alert" role="alert">

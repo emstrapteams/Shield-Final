@@ -224,6 +224,10 @@
   color: #991b1b;
 }
 
+.sac-content-area.has-items-error > .sac-panel {
+  display: none;
+}
+
 /* Stats Grids */
 .sac-stats-grid {
   display: grid;

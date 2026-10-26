@@ -4,7 +4,6 @@ import "./EmployeeDashboard.css";
 import logo from "../assets/logo.png";
 import EmergencyList from "../components/EmergencyList";
 import EmergencyForm from "../components/EmergencyForm";
-import { getMyEmergencies } from "../services/emergencyService";
 function EmployeeDashboard({ user, onLogout }) {
   const [activeTab, setActiveTab] = useState("report");
 

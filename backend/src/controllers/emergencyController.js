@@ -313,9 +313,20 @@ const uploadEmergencyEvidence = async (req, res) => {
   } catch (error) {
     console.error("Evidence upload error:", error);
 
-    return res.status(500).json({
+    const statusCode =
+      error.code === "EVIDENCE_STORAGE_NOT_CONFIGURED" ? 503 :
+      error.http_code === 401 || error.http_code === 403 ? 502 :
+      500;
+    const message =
+      error.code === "EVIDENCE_STORAGE_NOT_CONFIGURED"
+        ? "Photo storage is not configured. Set CLOUDINARY_URL or all three Cloudinary credentials in the backend production environment."
+        : error.http_code === 401 || error.http_code === 403
+          ? "Photo storage rejected its credentials. Check the Cloudinary production credentials."
+          : "Failed to upload emergency evidence. Check the backend function logs for the upload error.";
+
+    return res.status(statusCode).json({
       success: false,
-      message: "Failed to upload emergency evidence",
+      message,
     });
   }
 };

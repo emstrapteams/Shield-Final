@@ -7,6 +7,14 @@ const uploadEvidenceToCloudinary = (file) => {
       return;
     }
 
+    const config = cloudinary.config();
+    if (!config.cloud_name || !config.api_key || !config.api_secret) {
+      const error = new Error("Cloudinary evidence storage is not configured.");
+      error.code = "EVIDENCE_STORAGE_NOT_CONFIGURED";
+      reject(error);
+      return;
+    }
+
     const resourceType = file.mimetype.startsWith("video/")
       ? "video"
       : "image";

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../intern-api/client";
 import StatusBadge from "../intern-components/StatusBadge";
 import Pagination from "../intern-components/Pagination";
@@ -7,6 +7,7 @@ import EmptyState from "../intern-components/EmptyState";
 import ConfirmDialog from "../intern-components/ConfirmDialog";
 
 export default function Departments() {
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [meta, setMeta] = useState({ page: 1, totalPages: 1, total: 0 });
   const [search, setSearch] = useState("");
@@ -70,7 +71,7 @@ export default function Departments() {
           title="No departments found"
           message="Try adjusting your search, or add your first department."
           actionLabel="+ Add Department"
-          onAction={() => (window.location.href = "/departments/new")}
+          onAction={() => navigate("/departments/new")}
         />
       ) : (
         <>

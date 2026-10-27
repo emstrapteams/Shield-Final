@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../intern-api/client";
 import StatusBadge from "../intern-components/StatusBadge";
 import Pagination from "../intern-components/Pagination";
@@ -9,6 +9,7 @@ import ConfirmDialog from "../intern-components/ConfirmDialog";
 
 
 export default function Employees() {
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [facilities, setFacilities] = useState([]);
@@ -38,8 +39,8 @@ export default function Employees() {
   }, [search, department, facility, status]);
 
   useEffect(() => {
-    api.get("/departments", { limit: 100 }).then(({ data }) => setDepartments(data)).catch(() => {});
-    api.get("/facilities", { limit: 100 }).then(({ data }) => setFacilities(data)).catch(() => {});
+    api.get("/departments", { limit: 100 }).then(({ data }) => setDepartments(data)).catch((err) => setError(err.message || "Failed to load departments."));
+    api.get("/facilities", { limit: 100 }).then(({ data }) => setFacilities(data)).catch((err) => setError(err.message || "Failed to load facilities."));
   }, []);
 
   useEffect(() => { load(1); }, [load]);
@@ -96,7 +97,7 @@ export default function Employees() {
           title="No employees found"
           message="Try adjusting your search or filters, or add your first employee."
           actionLabel="+ Add Employee"
-          onAction={() => (window.location.href = "/employees/new")}
+          onAction={() => navigate("/employees/new")}
         />
       ) : (
         <>

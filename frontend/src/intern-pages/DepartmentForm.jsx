@@ -9,12 +9,15 @@ export default function DepartmentForm() {
 
   const [form, setForm] = useState({ name: "", description: "", status: "active" });
   const [errors, setErrors] = useState([]);
+  const [loadError, setLoadError] = useState("");
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!isEdit) return;
-    api.get(`/departments/${id}`).then(({ data }) => setForm(data)).finally(() => setLoading(false));
+    api.get(`/departments/${id}`).then(({ data }) => setForm(data)).catch((err) => {
+      setLoadError(err.message || "Failed to load department.");
+    }).finally(() => setLoading(false));
   }, [id, isEdit]);
 
   function update(field, value) {
@@ -40,6 +43,7 @@ export default function DepartmentForm() {
   }
 
   if (loading) return <div className="loading-state">Loading department…</div>;
+  if (loadError) return <div className="alert alert-error" role="alert">{loadError} <button type="button" className="btn btn-ghost" onClick={() => navigate("/departments")}>Back to Departments</button></div>;
 
   return (
     <div className="form-page">

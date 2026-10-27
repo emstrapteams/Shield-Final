@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../intern-api/client";
 import StatusBadge from "../intern-components/StatusBadge";
 import Pagination from "../intern-components/Pagination";
@@ -7,6 +7,7 @@ import EmptyState from "../intern-components/EmptyState";
 import ConfirmDialog from "../intern-components/ConfirmDialog";
 
 export default function Facilities() {
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [meta, setMeta] = useState({ page: 1, totalPages: 1, total: 0 });
   const [search, setSearch] = useState("");
@@ -72,7 +73,7 @@ export default function Facilities() {
           title="No facilities found"
           message="Try adjusting your search or filters, or add your first facility."
           actionLabel="+ Add Facility"
-          onAction={() => (window.location.href = "/facilities/new")}
+          onAction={() => navigate("/facilities/new")}
         />
       ) : (
         <>

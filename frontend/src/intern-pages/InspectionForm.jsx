@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { api } from "../intern-api/client";
 
 const RESULT_OPTIONS = [
@@ -18,7 +18,9 @@ const DEFAULT_CHECKLIST = [
 ];
 
 export default function InspectionForm() {
+  const { id } = useParams();
   const [params] = useSearchParams();
+  const isEdit = Boolean(id);
   const navigate = useNavigate();
   const preselectedEquipment = params.get("equipment") || "";
 
@@ -30,11 +32,31 @@ export default function InspectionForm() {
   const [notes, setNotes] = useState("");
   const [checklist, setChecklist] = useState(DEFAULT_CHECKLIST.map((c) => ({ ...c })));
   const [errors, setErrors] = useState([]);
+  const [loadError, setLoadError] = useState("");
+  const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    api.get("/equipment", { limit: 200 }).then(({ data }) => setEquipmentList(data)).catch(() => {});
+    api.get("/equipment", { limit: 200 }).then(({ data }) => setEquipmentList(data)).catch((err) => setErrors([err.message || "Failed to load equipment."]));
   }, []);
+
+  useEffect(() => {
+    if (!isEdit) return;
+    api.get(`/inspections/${id}`).then(({ data }) => {
+      setEquipment(data.equipment?._id || data.equipment || "");
+      setInspectorName(data.inspectorName || data.inspector?.name || "");
+      setInspectionDate(data.inspectionDate ? data.inspectionDate.substring(0, 10) : "");
+      setNextInspectionDate(data.nextInspectionDate ? data.nextInspectionDate.substring(0, 10) : "");
+      setNotes(data.notes || "");
+      setChecklist(data.checklist.map((item) => ({
+        item: item.item,
+        result: item.result,
+        notes: item.notes || "",
+      })));
+    }).catch((err) => {
+      setLoadError(err.message || "Failed to load inspection.");
+    }).finally(() => setLoading(false));
+  }, [id, isEdit]);
 
   function updateChecklistItem(index, field, value) {
     setChecklist((rows) => rows.map((r, i) => (i === index ? { ...r, [field]: value } : r)));
@@ -59,8 +81,13 @@ export default function InspectionForm() {
         notes,
         checklist,
       };
-      const { data } = await api.post("/inspections", payload);
-      navigate(`/inspections/${data._id}`);
+      if (isEdit) {
+        await api.put(`/inspections/${id}`, payload);
+        navigate(`/inspections/${id}`);
+      } else {
+        const { data } = await api.post("/inspections", payload);
+        navigate(`/inspections/${data._id}`);
+      }
     } catch (err) {
       setErrors(err.errors || [err.message]);
     } finally {
@@ -68,9 +95,19 @@ export default function InspectionForm() {
     }
   }
 
+  if (loading) return <div className="loading-state">Loading inspection…</div>;
+  if (loadError) {
+    return (
+      <div>
+        <div className="alert alert-error" role="alert">{loadError}</div>
+        <button type="button" className="btn btn-ghost" onClick={() => navigate("/inspections")}>Back to Inspections</button>
+      </div>
+    );
+  }
+
   return (
     <div className="form-page">
-      <h1>New Inspection</h1>
+      <h1>{isEdit ? "Edit Inspection" : "New Inspection"}</h1>
 
       {errors.length > 0 && <div className="alert alert-error"><ul>{errors.map((e, i) => <li key={i}>{e}</li>)}</ul></div>}
 
@@ -78,7 +115,7 @@ export default function InspectionForm() {
         <div className="form-grid">
           <label className="field field-wide">
             <span>Equipment *</span>
-            <select value={equipment} onChange={(e) => setEquipment(e.target.value)} required>
+            <select value={equipment} onChange={(e) => setEquipment(e.target.value)} required disabled={isEdit}>
               <option value="">— Select equipment —</option>
               {equipmentList.map((e) => (
                 <option key={e._id} value={e._id}>{e.name} ({e.type.replace(/_/g, " ")})</option>
@@ -130,8 +167,8 @@ export default function InspectionForm() {
         <textarea rows={3} className="input" style={{ width: "100%" }} value={notes} onChange={(e) => setNotes(e.target.value)} />
 
         <div className="form-actions">
-          <button type="button" className="btn btn-ghost" onClick={() => navigate(-1)}>Cancel</button>
-          <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? "Saving…" : "Submit Inspection"}</button>
+          <button type="button" className="btn btn-ghost" onClick={() => navigate(isEdit ? `/inspections/${id}` : -1)}>Cancel</button>
+          <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? "Saving…" : isEdit ? "Save Changes" : "Submit Inspection"}</button>
         </div>
       </form>
     </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../intern-api/client";
 import Pagination from "../intern-components/Pagination";
 import EmptyState from "../intern-components/EmptyState";
@@ -10,6 +10,7 @@ const STATUS_BADGE = {
 };
 
 export default function CorrectiveActions() {
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [meta, setMeta] = useState({ page: 1, totalPages: 1, total: 0 });
   const [search, setSearch] = useState("");
@@ -44,7 +45,12 @@ export default function CorrectiveActions() {
           <h1>Corrective Actions</h1>
           <p className="page-sub">{meta.total} total action{meta.total === 1 ? "" : "s"}</p>
         </div>
-        <Link to="/corrective-actions/new" className="btn btn-primary">+ Add Action</Link>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button type="button" className="btn btn-ghost" onClick={() => load(1)} disabled={loading}>
+            {loading ? "Refreshing…" : "Refresh"}
+          </button>
+          <Link to="/corrective-actions/new" className="btn btn-primary">+ Add Action</Link>
+        </div>
       </div>
 
       <div className="toolbar">
@@ -69,7 +75,7 @@ export default function CorrectiveActions() {
       {loading ? (
         <div className="loading-state">Loading corrective actions…</div>
       ) : items.length === 0 ? (
-        <EmptyState title="No corrective actions found" message="Try adjusting your filters, or add your first action." actionLabel="+ Add Action" onAction={() => (window.location.href = "/corrective-actions/new")} />
+        <EmptyState title="No corrective actions found" message="Try adjusting your filters, or add your first action." actionLabel="+ Add Action" onAction={() => navigate("/corrective-actions/new")} />
       ) : (
         <>
           <table className="table">

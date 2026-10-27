@@ -32,7 +32,7 @@ export default function Inspections() {
   }, [facility, result, from, to]);
 
   useEffect(() => {
-    api.get("/facilities", { limit: 100 }).then(({ data }) => setFacilities(data)).catch(() => {});
+    api.get("/facilities", { limit: 100 }).then(({ data }) => setFacilities(data)).catch((err) => setError(err.message || "Failed to load facilities."));
   }, []);
   useEffect(() => { load(1); }, [load]);
 

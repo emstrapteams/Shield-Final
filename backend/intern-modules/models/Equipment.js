@@ -28,8 +28,8 @@ const EQUIPMENT_TYPES = [
   "other",
 ];
 
-// Equipment lifecycle status. Auto-derived from dates on save (see below)
-// unless manually set to 'inactive', which always wins.
+// Equipment lifecycle status. Auto-derived from dates on save unless manually
+// set to 'inactive' or 'replacement_required', which always wins.
 const EQUIPMENT_STATUSES = ["active", "inspection_due", "overdue", "replacement_required", "inactive"];
 
 const equipmentSchema = new mongoose.Schema(
@@ -88,7 +88,7 @@ equipmentSchema.index({ company: 1, name: "text", location: "text" });
 // also respected as-is; recomputation can still escalate from 'active').
 
 equipmentSchema.pre("save", function () {
-  if (this.status === "inactive") return;
+  if (this.status === "inactive" || this.status === "replacement_required") return;
 
   const today = new Date();
   const dueWindowMs =

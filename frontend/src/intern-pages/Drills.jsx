@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../intern-api/client";
 import SimpleStatusBadge from "../intern-components/SimpleStatusBadge";
 import Pagination from "../intern-components/Pagination";
@@ -8,6 +8,7 @@ import EmptyState from "../intern-components/EmptyState";
 const TYPE_LABELS = { fire: "Fire", evacuation: "Evacuation", medical_emergency: "Medical Emergency", custom: "Custom" };
 
 export default function Drills() {
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [facilities, setFacilities] = useState([]);
   const [meta, setMeta] = useState({ page: 1, totalPages: 1, total: 0 });
@@ -33,7 +34,7 @@ export default function Drills() {
   }, [search, facility, type, status]);
 
   useEffect(() => {
-    api.get("/facilities", { limit: 100 }).then(({ data }) => setFacilities(data)).catch(() => {});
+    api.get("/facilities", { limit: 100 }).then(({ data }) => setFacilities(data)).catch((err) => setError(err.message || "Failed to load facilities."));
   }, []);
   useEffect(() => { load(1); }, [load]);
 
@@ -71,7 +72,7 @@ export default function Drills() {
       {loading ? (
         <div className="loading-state">Loading drills…</div>
       ) : items.length === 0 ? (
-        <EmptyState title="No drills found" message="Try adjusting your filters, or schedule your first drill." actionLabel="+ Schedule Drill" onAction={() => (window.location.href = "/drills/new")} />
+        <EmptyState title="No drills found" message="Try adjusting your filters, or schedule your first drill." actionLabel="+ Schedule Drill" onAction={() => navigate("/drills/new")} />
       ) : (
         <>
           <table className="table">

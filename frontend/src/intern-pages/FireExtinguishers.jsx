@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../intern-api/client";
 import EquipmentStatusBadge from "../intern-components/EquipmentStatusBadge";
 import Pagination from "../intern-components/Pagination";
 import EmptyState from "../intern-components/EmptyState";
 
 export default function FireExtinguishers() {
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [summary, setSummary] = useState(null);
   const [facilities, setFacilities] = useState([]);
@@ -31,8 +32,8 @@ export default function FireExtinguishers() {
   }, [search, facility, status]);
 
   useEffect(() => {
-    api.get("/facilities", { limit: 100 }).then(({ data }) => setFacilities(data)).catch(() => {});
-    api.get("/fire-extinguishers/summary").then(({ data }) => setSummary(data)).catch(() => {});
+    api.get("/facilities", { limit: 100 }).then(({ data }) => setFacilities(data)).catch((err) => setError(err.message || "Failed to load facilities."));
+    api.get("/fire-extinguishers/summary").then(({ data }) => setSummary(data)).catch((err) => setError(err.message || "Failed to load extinguisher summary."));
   }, []);
   useEffect(() => { load(1); }, [load]);
 
@@ -77,7 +78,7 @@ export default function FireExtinguishers() {
       {loading ? (
         <div className="loading-state">Loading fire extinguishers…</div>
       ) : items.length === 0 ? (
-        <EmptyState title="No fire extinguishers found" message="Try adjusting your filters, or add your first one." actionLabel="+ Add Extinguisher" onAction={() => (window.location.href = "/fire-extinguishers/new")} />
+        <EmptyState title="No fire extinguishers found" message="Try adjusting your filters, or add your first one." actionLabel="+ Add Extinguisher" onAction={() => navigate("/fire-extinguishers/new")} />
       ) : (
         <>
           <table className="table">

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../intern-api/client";
 import SimpleStatusBadge from "../intern-components/SimpleStatusBadge";
 import Pagination from "../intern-components/Pagination";
@@ -11,6 +11,7 @@ const TYPE_LABELS = {
 };
 
 export default function TrainingPrograms() {
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [meta, setMeta] = useState({ page: 1, totalPages: 1, total: 0 });
   const [search, setSearch] = useState("");
@@ -63,7 +64,7 @@ export default function TrainingPrograms() {
       {loading ? (
         <div className="loading-state">Loading programs…</div>
       ) : items.length === 0 ? (
-        <EmptyState title="No training programs found" message="Try adjusting your filters, or add your first program." actionLabel="+ Add Program" onAction={() => (window.location.href = "/training-programs/new")} />
+        <EmptyState title="No training programs found" message="Try adjusting your filters, or add your first program." actionLabel="+ Add Program" onAction={() => navigate("/training-programs/new")} />
       ) : (
         <>
           <table className="table">

@@ -14,6 +14,7 @@ export default function FacilityForm() {
 
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState([]);
+  const [loadError, setLoadError] = useState("");
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
 
@@ -26,6 +27,8 @@ export default function FacilityForm() {
         latitude: data.latitude ?? "", longitude: data.longitude ?? "",
         status: data.status,
       });
+    }).catch((err) => {
+      setLoadError(err.message || "Failed to load facility.");
     }).finally(() => setLoading(false));
   }, [id, isEdit]);
 
@@ -57,6 +60,7 @@ export default function FacilityForm() {
   }
 
   if (loading) return <div className="loading-state">Loading facility…</div>;
+  if (loadError) return <div className="alert alert-error" role="alert">{loadError} <button type="button" className="btn btn-ghost" onClick={() => navigate("/facilities")}>Back to Facilities</button></div>;
 
   return (
     <div className="form-page">

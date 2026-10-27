@@ -18,6 +18,7 @@ export default function EmergencyResourceForm() {
 
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState([]);
+  const [loadError, setLoadError] = useState("");
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
 
@@ -30,6 +31,8 @@ export default function EmergencyResourceForm() {
         location: data.location || "", coverageArea: data.coverageArea || "", availability: data.availability || "",
         priority: data.priority, integrationStatus: data.integrationStatus, status: data.status, notes: data.notes || "",
       });
+    }).catch((err) => {
+      setLoadError(err.message || "Failed to load emergency resource.");
     }).finally(() => setLoading(false));
   }, [id, isEdit]);
 
@@ -66,6 +69,7 @@ export default function EmergencyResourceForm() {
   }
 
   if (loading) return <div className="loading-state">Loading resource…</div>;
+  if (loadError) return <div className="alert alert-error" role="alert">{loadError} <button type="button" className="btn btn-ghost" onClick={() => navigate("/emergency-resources")}>Back to Emergency Resources</button></div>;
 
   const typeOptions = form.category === "internal" ? INTERNAL_TYPES : EXTERNAL_TYPES;
 

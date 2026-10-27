@@ -32,6 +32,7 @@ export default function InspectionDetail() {
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <span className={"badge " + (RESULT_BADGE[inspection.result] || "badge-inactive")}>{inspection.result}</span>
+          <Link to={`/inspections/${id}/edit`} className="btn btn-primary">Edit</Link>
           {inspection.equipment?._id && (
             <Link to={`/equipment/${inspection.equipment._id}`} className="btn btn-ghost">View Equipment</Link>
           )}

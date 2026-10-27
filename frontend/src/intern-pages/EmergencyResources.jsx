@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../intern-api/client";
 import SimpleStatusBadge from "../intern-components/SimpleStatusBadge";
 import Pagination from "../intern-components/Pagination";
@@ -13,6 +13,7 @@ const SERVICE_LABELS = {
 };
 
 export default function EmergencyResources() {
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [meta, setMeta] = useState({ page: 1, totalPages: 1, total: 0 });
   const [search, setSearch] = useState("");
@@ -66,7 +67,7 @@ export default function EmergencyResources() {
       {loading ? (
         <div className="loading-state">Loading resources…</div>
       ) : items.length === 0 ? (
-        <EmptyState title="No emergency resources found" message="Try adjusting your filters, or add your first resource." actionLabel="+ Add Resource" onAction={() => (window.location.href = "/emergency-resources/new")} />
+        <EmptyState title="No emergency resources found" message="Try adjusting your filters, or add your first resource." actionLabel="+ Add Resource" onAction={() => navigate("/emergency-resources/new")} />
       ) : (
         <>
           <table className="table">

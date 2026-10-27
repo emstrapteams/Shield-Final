@@ -18,12 +18,13 @@ export default function EmployeeForm() {
   const [departments, setDepartments] = useState([]);
   const [facilities, setFacilities] = useState([]);
   const [errors, setErrors] = useState([]);
+  const [loadError, setLoadError] = useState("");
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    api.get("/departments", { limit: 100 }).then(({ data }) => setDepartments(data)).catch(() => {});
-    api.get("/facilities", { limit: 100 }).then(({ data }) => setFacilities(data)).catch(() => {});
+    api.get("/departments", { limit: 100 }).then(({ data }) => setDepartments(data)).catch((err) => setErrors([err.message || "Failed to load departments."]));
+    api.get("/facilities", { limit: 100 }).then(({ data }) => setFacilities(data)).catch((err) => setErrors([err.message || "Failed to load facilities."]));
   }, []);
 
   useEffect(() => {
@@ -43,6 +44,8 @@ export default function EmployeeForm() {
         emergencyContactRelationship: data.emergencyContact?.relationship || "",
         status: data.status,
       });
+    }).catch((err) => {
+      setLoadError(err.message || "Failed to load employee.");
     }).finally(() => setLoading(false));
   }, [id, isEdit]);
 
@@ -88,6 +91,7 @@ export default function EmployeeForm() {
   }
 
   if (loading) return <div className="loading-state">Loading employee…</div>;
+  if (loadError) return <div className="alert alert-error" role="alert">{loadError} <button type="button" className="btn btn-ghost" onClick={() => navigate("/employees")}>Back to Employees</button></div>;
 
   return (
     <div className="form-page">

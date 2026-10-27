@@ -16,6 +16,7 @@ export default function TrainingProgramForm() {
 
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState([]);
+  const [loadError, setLoadError] = useState("");
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
 
@@ -27,6 +28,8 @@ export default function TrainingProgramForm() {
         trainer: data.trainer || "", durationHours: data.durationHours ?? "",
         requiredSessionsPerYear: data.requiredSessionsPerYear ?? "2", status: data.status,
       });
+    }).catch((err) => {
+      setLoadError(err.message || "Failed to load training program.");
     }).finally(() => setLoading(false));
   }, [id, isEdit]);
 
@@ -56,6 +59,7 @@ export default function TrainingProgramForm() {
   }
 
   if (loading) return <div className="loading-state">Loading program…</div>;
+  if (loadError) return <div className="alert alert-error" role="alert">{loadError} <button type="button" className="btn btn-ghost" onClick={() => navigate("/training-programs")}>Back to Training Programs</button></div>;
 
   return (
     <div className="form-page">

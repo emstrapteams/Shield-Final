@@ -14,6 +14,7 @@ export default function CorrectiveActionForm() {
 
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState([]);
+  const [loadError, setLoadError] = useState("");
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
 
@@ -29,6 +30,8 @@ export default function CorrectiveActionForm() {
         dueDate: data.dueDate ? data.dueDate.substring(0, 10) : "",
         status: data.status,
       });
+    }).catch((err) => {
+      setLoadError(err.message || "Failed to load corrective action.");
     }).finally(() => setLoading(false));
   }, [id, isEdit]);
 
@@ -54,6 +57,16 @@ export default function CorrectiveActionForm() {
   }
 
   if (loading) return <div className="loading-state">Loading corrective action…</div>;
+  if (loadError) {
+    return (
+      <div>
+        <div className="alert alert-error" role="alert">{loadError}</div>
+        <button type="button" className="btn btn-ghost" onClick={() => navigate("/corrective-actions")}>
+          Back to Corrective Actions
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="form-page">

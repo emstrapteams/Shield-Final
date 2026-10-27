@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../intern-api/client";
 import SimpleStatusBadge from "../intern-components/SimpleStatusBadge";
 import Pagination from "../intern-components/Pagination";
 import EmptyState from "../intern-components/EmptyState";
 
 export default function TrainingSessions() {
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [programs, setPrograms] = useState([]);
   const [facilities, setFacilities] = useState([]);
@@ -31,8 +32,8 @@ export default function TrainingSessions() {
   }, [program, facility, status]);
 
   useEffect(() => {
-    api.get("/training-programs", { limit: 100 }).then(({ data }) => setPrograms(data)).catch(() => {});
-    api.get("/facilities", { limit: 100 }).then(({ data }) => setFacilities(data)).catch(() => {});
+    api.get("/training-programs", { limit: 100 }).then(({ data }) => setPrograms(data)).catch((err) => setError(err.message || "Failed to load training programs."));
+    api.get("/facilities", { limit: 100 }).then(({ data }) => setFacilities(data)).catch((err) => setError(err.message || "Failed to load facilities."));
   }, []);
   useEffect(() => { load(1); }, [load]);
 
@@ -69,7 +70,7 @@ export default function TrainingSessions() {
       {loading ? (
         <div className="loading-state">Loading sessions…</div>
       ) : items.length === 0 ? (
-        <EmptyState title="No training sessions found" message="Try adjusting your filters, or schedule your first session." actionLabel="+ Schedule Session" onAction={() => (window.location.href = "/training-sessions/new")} />
+        <EmptyState title="No training sessions found" message="Try adjusting your filters, or schedule your first session." actionLabel="+ Schedule Session" onAction={() => navigate("/training-sessions/new")} />
       ) : (
         <>
           <table className="table">

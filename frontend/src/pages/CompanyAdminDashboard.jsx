@@ -13,6 +13,7 @@ import { connectSocket, disconnectSocket } from "../services/socketService";
 import "./CompanyAdminDashboard.css";
 
 import Dashboard from "../intern-pages/Dashboard";
+import TrainingDashboard from "../intern-pages/TrainingDashboard";
 import Employees from "../intern-pages/Employees";
 import Departments from "../intern-pages/Departments";
 import Facilities from "../intern-pages/Facilities";
@@ -128,6 +129,7 @@ const [activeSection, setActiveSection] = useState("overview");
       "/corrective-actions": "correctiveActions",
       "/emergency-resources": "emergencyResources",
       "/drills": "drills",
+      "/training-dashboard": "trainingDashboard",
       "/training-programs": "trainingPrograms",
       "/training-sessions": "trainingSessions",
       "/reports": "reports",
@@ -137,8 +139,13 @@ const [activeSection, setActiveSection] = useState("overview");
       .sort((a, b) => b.length - a.length)
       .find((basePath) => pathname === basePath || pathname.startsWith(`${basePath}/`));
 
-    setActiveSection(matchingPath ? sectionPaths[matchingPath] : "overview");
-  }, [location.pathname]);
+    if (!matchingPath) {
+      navigate("/safety-dashboard", { replace: true });
+      return;
+    }
+
+    setActiveSection(sectionPaths[matchingPath]);
+  }, [location.pathname, navigate]);
 
   const [statusFilter, setStatusFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
@@ -297,6 +304,7 @@ useEffect(() => {
     correctiveActions: "Corrective Actions",
     emergencyResources: "Emergency Resources",
     drills: "Emergency Drills",
+    trainingDashboard: "Training Dashboard",
     trainingPrograms: "Training Programs",
     trainingSessions: "Training Sessions",
     reports: "Safety Reports",
@@ -396,6 +404,7 @@ useEffect(() => {
     setSelectedEmergency(emergency);
     setActiveSection("emergencies");
     setActionError("");
+    navigate("/emergencies");
   };
 
   return (
@@ -454,6 +463,7 @@ useEffect(() => {
             ["correctiveActions", "Corrective Actions", "↗"],
             ["emergencyResources", "Emergency Resources", "✚"],
             ["drills", "Emergency Drills", "⚑"],
+            ["trainingDashboard", "Training Dashboard", "▦"],
             ["trainingPrograms", "Training Programs", "▣"],
             ["trainingSessions", "Training Sessions", "▣"],
             ["reports", "Reports", "▥"],
@@ -474,6 +484,7 @@ useEffect(() => {
                   correctiveActions: "/corrective-actions",
                   emergencyResources: "/emergency-resources",
                   drills: "/drills",
+                  trainingDashboard: "/training-dashboard",
                   trainingPrograms: "/training-programs",
                   trainingSessions: "/training-sessions",
                   reports: "/reports",
@@ -551,7 +562,7 @@ useEffect(() => {
 
                 <button
                   className="ca-primary-button"
-                  onClick={() => setActiveSection("emergencies")}
+                  onClick={() => navigate("/emergencies")}
                 >
                   View Emergencies
                 </button>
@@ -1113,6 +1124,7 @@ useEffect(() => {
 
       <Route path="/inspections" element={<Inspections />} />
       <Route path="/inspections/new" element={<InspectionForm />} />
+      <Route path="/inspections/:id/edit" element={<InspectionForm />} />
       <Route path="/inspections/:id" element={<InspectionDetail />} />
 
       <Route path="/corrective-actions" element={<CorrectiveActions />} />
@@ -1141,6 +1153,7 @@ useEffect(() => {
       <Route path="/training-sessions/:id" element={<TrainingSessionDetail />} />
 
       <Route path="/safety-dashboard" element={<Dashboard />} />
+      <Route path="/training-dashboard" element={<TrainingDashboard />} />
       <Route path="/reports" element={<Reports />} />
       <Route path="*" element={<Navigate to="/safety-dashboard" replace />} />
     </Routes>

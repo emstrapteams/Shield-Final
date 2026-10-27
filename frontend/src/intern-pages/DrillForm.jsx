@@ -17,11 +17,12 @@ export default function DrillForm() {
   const [form, setForm] = useState(emptyForm);
   const [facilities, setFacilities] = useState([]);
   const [errors, setErrors] = useState([]);
+  const [loadError, setLoadError] = useState("");
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    api.get("/facilities", { limit: 100 }).then(({ data }) => setFacilities(data)).catch(() => {});
+    api.get("/facilities", { limit: 100 }).then(({ data }) => setFacilities(data)).catch((err) => setErrors([err.message || "Failed to load facilities."]));
   }, []);
 
   useEffect(() => {
@@ -32,6 +33,8 @@ export default function DrillForm() {
         scenario: data.scenario || "", date: data.date ? data.date.substring(0, 10) : "",
         startTime: data.startTime || "", endTime: data.endTime || "", status: data.status,
       });
+    }).catch((err) => {
+      setLoadError(err.message || "Failed to load drill.");
     }).finally(() => setLoading(false));
   }, [id, isEdit]);
 
@@ -57,6 +60,7 @@ export default function DrillForm() {
   }
 
   if (loading) return <div className="loading-state">Loading drill…</div>;
+  if (loadError) return <div className="alert alert-error" role="alert">{loadError} <button type="button" className="btn btn-ghost" onClick={() => navigate("/drills")}>Back to Drills</button></div>;
 
   return (
     <div className="form-page">

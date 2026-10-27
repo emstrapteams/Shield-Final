@@ -8,6 +8,24 @@ const scopedFilter = (req, extra = {}) => {
   return { company: req.companyId, ...extra };
 };
 
+const syncEquipmentInspectionState = async (inspection, equipment, companyId) => {
+  const latestInspection = await Inspection.findOne({
+    company: companyId,
+    equipment: equipment._id,
+  }).sort({ inspectionDate: -1, createdAt: -1 });
+
+  if (!latestInspection) return;
+
+  equipment.lastInspectionDate = latestInspection.inspectionDate;
+  equipment.nextInspectionDate = latestInspection.nextInspectionDate || undefined;
+  if (latestInspection.result === "failed") {
+    equipment.status = "replacement_required";
+  } else if (equipment.status !== "inactive") {
+    equipment.status = "active";
+  }
+  await equipment.save();
+};
+
 // POST /api/inspections
 // Creates the inspection AND rolls the result forward onto the equipment
 // record (lastInspectionDate / nextInspectionDate / status), since an
@@ -87,10 +105,16 @@ const getInspectionById = asyncHandler(async (req, res) => {
 const updateInspection = asyncHandler(async (req, res) => {
   const inspection = await Inspection.findOne(scopedFilter(req, { _id: req.params.id }));
   if (!inspection) return fail(res, 404, "Inspection not found.");
+  const equipmentRecord = await Equipment.findOne({
+    _id: inspection.equipment,
+    company: req.companyId,
+  });
+  if (!equipmentRecord) return fail(res, 404, "Equipment not found for this company.");
 
   const { company, equipment, ...rest } = req.body; // equipment link immutable after creation
   Object.assign(inspection, rest);
   await inspection.save(); // re-derives result
+  await syncEquipmentInspectionState(inspection, equipmentRecord, req.companyId);
   return ok(res, inspection);
 });
 

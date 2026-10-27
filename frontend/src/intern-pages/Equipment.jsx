@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../intern-api/client";
 import EquipmentStatusBadge from "../intern-components/EquipmentStatusBadge";
 import Pagination from "../intern-components/Pagination";
@@ -27,6 +27,7 @@ const TYPE_LABELS = {
 };
 
 export default function Equipment() {
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [facilities, setFacilities] = useState([]);
   const [meta, setMeta] = useState({ page: 1, totalPages: 1, total: 0 });
@@ -53,7 +54,7 @@ export default function Equipment() {
   }, [search, facility, category, type, status]);
 
   useEffect(() => {
-    api.get("/facilities", { limit: 100 }).then(({ data }) => setFacilities(data)).catch(() => {});
+    api.get("/facilities", { limit: 100 }).then(({ data }) => setFacilities(data)).catch((err) => setError(err.message || "Failed to load facilities."));
   }, []);
   useEffect(() => { load(1); }, [load]);
 
@@ -96,7 +97,7 @@ export default function Equipment() {
       {loading ? (
         <div className="loading-state">Loading equipment…</div>
       ) : items.length === 0 ? (
-        <EmptyState title="No equipment found" message="Try adjusting your filters, or add your first item." actionLabel="+ Add Equipment" onAction={() => (window.location.href = "/equipment/new")} />
+        <EmptyState title="No equipment found" message="Try adjusting your filters, or add your first item." actionLabel="+ Add Equipment" onAction={() => navigate("/equipment/new")} />
       ) : (
         <>
           <table className="table">

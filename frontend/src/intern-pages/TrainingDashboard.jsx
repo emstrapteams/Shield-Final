@@ -26,9 +26,9 @@ export default function TrainingDashboard() {
   }, [program, facility, department]);
 
   useEffect(() => {
-    api.get("/training-programs", { limit: 100 }).then(({ data }) => setPrograms(data)).catch(() => {});
-    api.get("/facilities", { limit: 100 }).then(({ data }) => setFacilities(data)).catch(() => {});
-    api.get("/departments", { limit: 100 }).then(({ data }) => setDepartments(data)).catch(() => {});
+    api.get("/training-programs", { limit: 100 }).then(({ data }) => setPrograms(data)).catch((err) => setError(err.message || "Failed to load training programs."));
+    api.get("/facilities", { limit: 100 }).then(({ data }) => setFacilities(data)).catch((err) => setError(err.message || "Failed to load facilities."));
+    api.get("/departments", { limit: 100 }).then(({ data }) => setDepartments(data)).catch((err) => setError(err.message || "Failed to load departments."));
   }, []);
   useEffect(() => { load(); }, [load]);
 
